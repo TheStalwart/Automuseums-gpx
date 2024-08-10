@@ -5,6 +5,6 @@ print("Downloading country list...")
 r = requests.get('https://automuseums.info/homepage')
 html_contents = r.text
 soup = BeautifulSoup(html_contents, 'html.parser')
-countries = soup.find(id='block-searchmuseumsin').find_all('a')
+countries = soup.find(id='block-searchmuseumsin').find_all('a') # https://beautiful-soup-4.readthedocs.io/en/latest/#navigating-the-tree
 for country in countries:
     print(f"{country['href']}")
