@@ -130,6 +130,21 @@ def download_country_index(selected_country):
             return index_pages
         else:
             return download_index()
+        
+def parse_country_index(pages):
+    museums = []
+
+    for page in pages:
+        museum_blocks = page.find_all(class_='node-readmore')
+
+        def define_museum_properties(li_tag):
+            a_tag = li_tag.find('a')
+            name = a_tag['title'].strip()
+            return { 'name': name, 'relative_url': a_tag['href'] }
+
+        museums.extend(list(map(define_museum_properties, museum_blocks)))
+
+    return museums
 
 # Ensure cache_root exists
 if not os.path.isdir(CACHE_ROOT):
@@ -164,3 +179,7 @@ else:
         print('Updating all country indexes...')
         for selected_country in countries:
             country_indexes.append(download_country_index(selected_country))
+
+for country_index in country_indexes:
+    museum_list = parse_country_index(country_index)
+    rich.print(museum_list)
