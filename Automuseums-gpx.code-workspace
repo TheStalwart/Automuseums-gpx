@@ -19,13 +19,13 @@
 				],
 			},
 			{
-				"name": "Python Debugger: Italy only",
+				"name": "Python Debugger: UK only",
 				"type": "debugpy",
 				"request": "launch",
 				"program": "cli.py",
 				"console": "integratedTerminal",
 				"args": [
-					"--country", "Italy"
+					"--country", "United Kingdom"
 				],
 			}
 		]
