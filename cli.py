@@ -173,8 +173,9 @@ if args.country:
 else:
     if args.lowprofile:
         print('Keeping low profile, updating one random country index...')
+        selected_country = random.choice(countries)
         # In the future, i want this mode to update country index with oldest/absent cache
-        country_indexes.append(download_country_index(random.choice(countries)))
+        country_indexes.append(download_country_index(selected_country))
     else:
         print('Updating all country indexes...')
         for selected_country in countries:
