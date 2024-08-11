@@ -4,6 +4,7 @@ import json
 import math
 import os
 import pathlib
+import random
 import sys
 import time
 import requests
@@ -142,6 +143,7 @@ countries = load_countries()
 readable_country_list = ', '.join(map(lambda country: country['name'], countries))
 arg_parser = argparse.ArgumentParser(epilog=f"Available countries: {readable_country_list}")
 arg_parser.add_argument('--country', help='Limit scrape to one country')
+arg_parser.add_argument('--lowprofile', action='store_true')
 args = arg_parser.parse_args()
 
 country_indexes = []
@@ -154,5 +156,11 @@ if args.country:
     selected_country = country_search_results[0]
     country_indexes.append(download_country_index(selected_country))
 else:
-    for selected_country in countries:
-        country_indexes.append(download_country_index(selected_country))
+    if args.lowprofile:
+        print('Keeping low profile, updating one random country index...')
+        # In the future, i want this mode to update country index with oldest/absent cache
+        country_indexes.append(download_country_index(random.choice(countries)))
+    else:
+        print('Updating all country indexes...')
+        for selected_country in countries:
+            country_indexes.append(download_country_index(selected_country))

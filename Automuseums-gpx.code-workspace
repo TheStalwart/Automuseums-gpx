@@ -27,6 +27,16 @@
 				"args": [],
 			},
 			{
+				"name": "Python Debugger: Low Profile mode",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "cli.py",
+				"console": "integratedTerminal",
+				"args": [
+					"--lowprofile"
+				],
+			},
+			{
 				"name": "Python Debugger: US only",
 				"type": "debugpy",
 				"request": "launch",
