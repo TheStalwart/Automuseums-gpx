@@ -45,6 +45,16 @@
 				"args": [
 					"--country", "United States"
 				],
+			},
+			{
+				"name": "Python Debugger: CZ only",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "cli.py",
+				"console": "integratedTerminal",
+				"args": [
+					"--country", "Czechia"
+				],
 			}
 		]
 	}
