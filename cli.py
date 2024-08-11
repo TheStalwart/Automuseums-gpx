@@ -63,7 +63,7 @@ def load_countries():
 
     return property_list
 
-def download_country(country):
+def download_country_index(country):
     print(f"Downloading {selected_country['name']}...")
 
     cache_country_root_path = os.path.join(CACHE_ROOT, 'countries')
@@ -153,7 +153,7 @@ if args.country:
         sys.exit(f"Country \"{args.country}\" not found.\n\nTry any of these: {readable_country_list}")
 
     selected_country = country_search_results[0]
-    country_indexes.append(download_country(selected_country))
+    country_indexes.append(download_country_index(selected_country))
 else:
     for selected_country in countries:
-        country_indexes.append(download_country(selected_country))
+        country_indexes.append(download_country_index(selected_country))
