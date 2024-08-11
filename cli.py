@@ -63,9 +63,7 @@ def load_countries():
 
     return property_list
 
-def download_country_index(country):
-    print(f"Downloading {selected_country['name']}...")
-
+def download_country_index(selected_country):
     cache_country_root_path = os.path.join(CACHE_ROOT, 'countries')
     if not os.path.isdir(cache_country_root_path):
         os.mkdir(cache_country_root_path)
@@ -75,6 +73,7 @@ def download_country_index(country):
         os.mkdir(cache_country_path)
 
     def download_index():
+        print(f"Downloading {selected_country['name']}...")
         index_pages = []
 
         # Delete old cache
