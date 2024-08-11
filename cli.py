@@ -60,17 +60,19 @@ def load_countries():
 
     return property_list
 
-arg_parser = argparse.ArgumentParser()
-arg_parser.add_argument('--country', help='Limit scrape to one country')
-args = arg_parser.parse_args()
-
 # Ensure cache_root exists
 if not os.path.isdir(CACHE_ROOT):
     os.mkdir(CACHE_ROOT)
 
 # Refresh country list
 countries = load_countries()
-rich.print(countries)
+# rich.print(countries)
+
+# Build ArgumentParser
+readable_country_list = ', '.join(map(lambda country: country['name'], countries))
+arg_parser = argparse.ArgumentParser(epilog=f"Available countries: {readable_country_list}")
+arg_parser.add_argument('--country', help='Limit scrape to one country')
+args = arg_parser.parse_args()
 
 if args.country:
     print(f"Downloading {args.country}...")
