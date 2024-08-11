@@ -3,6 +3,7 @@ import json
 import math
 import os
 import pathlib
+import sys
 import time
 import requests
 from bs4 import BeautifulSoup
@@ -75,7 +76,12 @@ arg_parser.add_argument('--country', help='Limit scrape to one country')
 args = arg_parser.parse_args()
 
 if args.country:
-    print(f"Downloading {args.country}...")
+    country_search_results = list(filter(lambda c: c['name'] == args.country, countries))
+    if len(country_search_results) < 1:
+        sys.exit(f"Country \"{args.country}\" not found.\n\nTry any of these: {readable_country_list}")
+
+    selected_country = country_search_results[0]
+    print(f"Downloading {selected_country}...")
 else:
     for country in countries:
         print(f"Downloading {country['name']}...")
