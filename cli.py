@@ -1,3 +1,4 @@
+import argparse
 import json
 import math
 import os
@@ -59,6 +60,10 @@ def load_countries():
 
     return property_list
 
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument('--country', help='Limit scrape to one country')
+args = arg_parser.parse_args()
+
 # Ensure cache_root exists
 if not os.path.isdir(CACHE_ROOT):
     os.mkdir(CACHE_ROOT)
@@ -66,3 +71,9 @@ if not os.path.isdir(CACHE_ROOT):
 # Refresh country list
 countries = load_countries()
 rich.print(countries)
+
+if args.country:
+    print(f"Downloading {args.country}...")
+else:
+    for country in countries:
+        print(f"Downloading {country['name']}...")

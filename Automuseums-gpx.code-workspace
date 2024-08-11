@@ -4,5 +4,30 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Python Debugger: Print help",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "cli.py",
+				"console": "integratedTerminal",
+				"args": [
+					"-h"
+				],
+			},
+			{
+				"name": "Python Debugger: Italy only",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "cli.py",
+				"console": "integratedTerminal",
+				"args": [
+					"--country", "Italy"
+				],
+			}
+		]
+	}
 }
