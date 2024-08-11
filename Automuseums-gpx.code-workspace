@@ -19,6 +19,14 @@
 				],
 			},
 			{
+				"name": "Python Debugger: No arguments",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "cli.py",
+				"console": "integratedTerminal",
+				"args": [],
+			},
+			{
 				"name": "Python Debugger: UK only",
 				"type": "debugpy",
 				"request": "launch",
