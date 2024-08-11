@@ -68,7 +68,7 @@ if not os.path.isdir(CACHE_ROOT):
 countries = load_countries()
 # rich.print(countries)
 
-# Build ArgumentParser
+# Build ArgumentParser https://docs.python.org/3/library/argparse.html
 readable_country_list = ', '.join(map(lambda country: country['name'], countries))
 arg_parser = argparse.ArgumentParser(epilog=f"Available countries: {readable_country_list}")
 arg_parser.add_argument('--country', help='Limit scrape to one country')
