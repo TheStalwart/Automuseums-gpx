@@ -27,13 +27,13 @@
 				"args": [],
 			},
 			{
-				"name": "Python Debugger: UK only",
+				"name": "Python Debugger: US only",
 				"type": "debugpy",
 				"request": "launch",
 				"program": "cli.py",
 				"console": "integratedTerminal",
 				"args": [
-					"--country", "United Kingdom"
+					"--country", "United States"
 				],
 			}
 		]
