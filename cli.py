@@ -202,10 +202,13 @@ def load_museum_page(country, museum_properties):
             return download_page(), cache_file_path
         
 def parse_museum_page(page):
-    museum_description = page.find(class_='node-content').find(class_='field--name-body').contents[0]
-    # for some museums, description is wrapped in extra <p> tag
-    if len(list(museum_description.children)) == 1:
-        museum_description = museum_description.contents[0]
+    museum_description = ''
+    body_div = page.find(class_='node-content').find(class_='field--name-body')
+    if body_div: # https://automuseums.info/estonia/estonian-museum-old-technology - no description <div>
+        # for some museums, description is wrapped in extra <p> tag
+        # https://automuseums.info/barbados/mallalieu-motor-collection - has two children <p> tags
+        # https://automuseums.info/jordan/royal-automobile-museum - field--name-body value is enclosed in double-quotes
+        museum_description = "\n".join(map(str, list(body_div.children)))
 
     return { 'description': museum_description }
 
