@@ -55,6 +55,26 @@
 				"args": [
 					"--country", "Czechia"
 				],
+			},
+			{
+				"name": "Python Debugger: Estonia only",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "cli.py",
+				"console": "integratedTerminal",
+				"args": [
+					"--country", "Estonia"
+				],
+			},
+			{
+				"name": "Python Debugger: Jordan only",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "cli.py",
+				"console": "integratedTerminal",
+				"args": [
+					"--country", "Jordan"
+				],
 			}
 		]
 	}
