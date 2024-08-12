@@ -186,7 +186,7 @@ def load_museum_page(country, museum_properties):
         return BeautifulSoup(page_contents, 'html.parser')
 
     if not os.path.isfile(cache_file_path):
-        return download_page()
+        return download_page(), cache_file_path
     else:
         cache_file_modification_timestamp = os.path.getmtime(cache_file_path)
         current_timestamp = time.time()
@@ -197,9 +197,9 @@ def load_museum_page(country, museum_properties):
             print(f"Loading {cache_file_age_hours} hours old cached museum page for {museum_properties['name']}...")
             with open(cache_file_path, 'r') as f:
                 html_contents = f.read()
-                return BeautifulSoup(html_contents, 'html.parser')
+                return BeautifulSoup(html_contents, 'html.parser'), cache_file_path
         else:
-            return download_page()
+            return download_page(), cache_file_path
         
 def parse_museum_page(page):
     museum_description = page.find(class_='node-content').find(class_='field--name-body').contents[0]
@@ -246,6 +246,8 @@ else:
 
 for country in country_indexes:
     for museum_properties in country['museums']:
-        museum_properties.update(parse_museum_page(load_museum_page(country['country'], museum_properties)))
+        page, cache_file_path = load_museum_page(country['country'], museum_properties)
+        museum_properties['cache_file_path'] = cache_file_path
+        museum_properties.update(parse_museum_page(page))
 
 rich.print(country_indexes)
