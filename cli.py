@@ -21,6 +21,7 @@ PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
 CACHE_ROOT = os.path.join(PROJECT_ROOT, "cache")
 COUNTRY_CACHE_MAX_AGE_MINUTES = 55
 INDEX_CACHE_MAX_AGE_HOURS = 24
+MUSEUM_CACHE_MAX_AGE_HOURS = 48
 
 def load_countries():
     cache_file_path = os.path.join(CACHE_ROOT, 'homepage.html')
@@ -73,6 +74,11 @@ def download_country_index(selected_country):
     if not os.path.isdir(cache_country_path):
         os.mkdir(cache_country_path)
 
+    selected_country['cache_path'] = cache_country_path
+
+    def format_return_value(index):
+        return { 'country': selected_country, 'museums': index }
+
     def download_index():
         print(f"Downloading {selected_country['name']}...")
         index_pages = []
@@ -106,7 +112,7 @@ def download_country_index(selected_country):
 
     cache_file_path = os.path.join(cache_country_path, "00.html")
     if not os.path.isfile(cache_file_path):
-        return download_index()
+        return format_return_value(parse_country_index(download_index()))
     else:
         cache_file_modification_timestamp = os.path.getmtime(cache_file_path)
         current_timestamp = time.time()
@@ -127,9 +133,9 @@ def download_country_index(selected_country):
 
                     index_pages.append(soup)
             
-            return index_pages
+            return format_return_value(parse_country_index(index_pages))
         else:
-            return download_index()
+            return format_return_value(parse_country_index(download_index()))
         
 def parse_country_index(pages):
     museums = []
@@ -145,6 +151,55 @@ def parse_country_index(pages):
         museums.extend(list(map(define_museum_properties, museum_blocks)))
 
     return museums
+
+def load_museum_page(country, museum_properties):
+    cache_museum_root_path = os.path.join(country['cache_path'], 'museums')
+    if not os.path.isdir(cache_museum_root_path):
+        os.mkdir(cache_museum_root_path)
+
+    # Museum page URLs encountered during debugging:
+    # https://automuseums.info/czechia/automoto-museum-lucany
+    # https://automuseums.info/czech-republic/museum-eastern-bloc-vehicles-%C5%BEelezn%C3%BD-brod
+    # https://automuseums.info/index.php/czechia/historic-car-museum-kuks
+    # https://automuseums.info/index.php/czech-republic/fire-brigade-museum-p%C5%99ibyslav
+
+    # Also, some entries are listed multiple times on country index page,
+    # e.g. https://automuseums.info/czech-republic/museum-historical-motorcycles 
+    # is listed 3x times on https://automuseums.info/museums/Czechia?page=4 as of Aug 11th 2024,
+    # all 3x entries have the same page link, but that page lists 3x locations.
+    # This needs to be exported as 3x different placemarks in GPX file.
+
+    # It would be much easier if every museum page had a numerical or some other kind of UUID
+
+    name_slug = museum_properties['relative_url'].split('/')[-1] # always use last slug because there could be "/index.php/" in the middle
+    sanitized_file_basename = "".join([x if x.isalnum() else "_" for x in name_slug]) # sanitize https://stackoverflow.com/a/295152
+    cache_file_path = os.path.join(cache_museum_root_path, f"{sanitized_file_basename}.html")
+
+    def download_page():
+        r = requests.get(f"{WEBSITE_ROOT_URL}{museum_properties['relative_url']}")
+        print(f"Downloaded {r.url}")
+        page_contents = r.text
+
+        with open(cache_file_path, "w") as f:
+            f.write(page_contents)
+
+        return BeautifulSoup(page_contents, 'html.parser')
+
+    if not os.path.isfile(cache_file_path):
+        return download_page()
+    else:
+        cache_file_modification_timestamp = os.path.getmtime(cache_file_path)
+        current_timestamp = time.time()
+        cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
+        cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
+
+        if cache_file_age_hours < MUSEUM_CACHE_MAX_AGE_HOURS:
+            print(f"Loading {cache_file_age_hours} hours old cached museum page for {museum_properties['name']}...")
+            with open(cache_file_path, 'r') as f:
+                html_contents = f.read()
+                return BeautifulSoup(html_contents, 'html.parser')
+        else:
+            return download_page()
 
 # Ensure cache_root exists
 if not os.path.isdir(CACHE_ROOT):
@@ -181,6 +236,8 @@ else:
         for selected_country in countries:
             country_indexes.append(download_country_index(selected_country))
 
-for country_index in country_indexes:
-    museum_list = parse_country_index(country_index)
-    rich.print(museum_list)
+rich.print(country_indexes)
+
+for country in country_indexes:
+    for museum_properties in country['museums']:
+        museum_properties['page_content'] = load_museum_page(country['country'], museum_properties)
