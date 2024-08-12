@@ -200,6 +200,14 @@ def load_museum_page(country, museum_properties):
                 return BeautifulSoup(html_contents, 'html.parser')
         else:
             return download_page()
+        
+def parse_museum_page(page):
+    museum_description = page.find(class_='node-content').find(class_='field--name-body').contents[0]
+    # for some museums, description is wrapped in extra <p> tag
+    if len(list(museum_description.children)) == 1:
+        museum_description = museum_description.contents[0]
+
+    return { 'description': museum_description }
 
 # Ensure cache_root exists
 if not os.path.isdir(CACHE_ROOT):
@@ -236,8 +244,8 @@ else:
         for selected_country in countries:
             country_indexes.append(download_country_index(selected_country))
 
-rich.print(country_indexes)
-
 for country in country_indexes:
     for museum_properties in country['museums']:
-        museum_properties['page_content'] = load_museum_page(country['country'], museum_properties)
+        museum_properties.update(parse_museum_page(load_museum_page(country['country'], museum_properties)))
+
+rich.print(country_indexes)
