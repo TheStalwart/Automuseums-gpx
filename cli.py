@@ -214,7 +214,13 @@ def parse_museum_page(page):
 
     drupal_node_id = page.find('article')['data-history-node-id']
 
-    return { 'description': museum_description, 'drupal_node_id': drupal_node_id }
+    data_json = page.find(attrs={"data-drupal-selector": "drupal-settings-json"}).contents[0]
+    data = json.loads(data_json)
+    leaflet_features = data['leaflet'][f"leaflet-map-node-museum-{drupal_node_id}-coordinates"]['features']
+    leaflet_points = list(filter(lambda f: f['type'] == 'point', leaflet_features))
+    coordinates = list(map(lambda p: { 'lat': p['lat'], 'lon': p['lon'] }, leaflet_points))
+
+    return { 'description': museum_description, 'drupal_node_id': drupal_node_id, 'coordinates': coordinates }
 
 # Ensure cache_root exists
 if not os.path.isdir(CACHE_ROOT):
