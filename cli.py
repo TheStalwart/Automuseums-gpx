@@ -85,7 +85,7 @@ def download_country_index(selected_country):
         # Redownload country's index of museums
         museum_list_url = f"{WEBSITE_ROOT_URL}{selected_country['relative_url']}"
         for page_index in range(100): # make sure we never get stuck in infinite loop
-            cached_file_name = f"{page_index}.html".rjust(7, '0')
+            cached_file_name = f"{page_index}.html".rjust(7, '0') # make all page numbers double-digits for easier sorting when loading cache
             cached_page_path = os.path.join(cache_country_path, cached_file_name)
             r = requests.get(museum_list_url, params={'page': page_index})
             print(f"Downloaded {r.url}")
