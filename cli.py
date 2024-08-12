@@ -169,7 +169,9 @@ def load_museum_page(country, museum_properties):
     # all 3x entries have the same page link, but that page lists 3x locations.
     # This needs to be exported as 3x different placemarks in GPX file.
 
-    # It would be much easier if every museum page had a numerical or some other kind of UUID
+    # A few days after that code was written,
+    # i discovered every museum page has data-history-node-id, 
+    # and museum pages can be loaded by /node/ID URLs, e.g. https://automuseums.info/node/1893
 
     name_slug = museum_properties['relative_url'].split('/')[-1] # always use last slug because there could be "/index.php/" in the middle
     sanitized_file_basename = "".join([x if x.isalnum() else "_" for x in name_slug]) # sanitize https://stackoverflow.com/a/295152
