@@ -212,7 +212,9 @@ def parse_museum_page(page):
         # https://automuseums.info/jordan/royal-automobile-museum - field--name-body value is enclosed in double-quotes
         museum_description = "\n".join(map(str, list(body_div.children)))
 
-    return { 'description': museum_description }
+    drupal_node_id = page.find('article')['data-history-node-id']
+
+    return { 'description': museum_description, 'drupal_node_id': drupal_node_id }
 
 # Ensure cache_root exists
 if not os.path.isdir(CACHE_ROOT):
