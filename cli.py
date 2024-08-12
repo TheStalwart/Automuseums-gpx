@@ -59,7 +59,7 @@ def load_countries():
 
     def define_country_properties(a_tag):
         name = a_tag.contents[0].strip()
-        return { 'name': name, 'relative_url': a_tag['href'] }
+        return { 'name': name, 'relative_url': a_tag['href'], 'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}" }
 
     property_list = list(map(define_country_properties, countries))
 
@@ -146,7 +146,7 @@ def parse_country_index(pages):
         def define_museum_properties(li_tag):
             a_tag = li_tag.find('a')
             name = a_tag['title'].strip()
-            return { 'name': name, 'relative_url': a_tag['href'] }
+            return { 'name': name, 'relative_url': a_tag['href'], 'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}" }
 
         museums.extend(list(map(define_museum_properties, museum_blocks)))
 
