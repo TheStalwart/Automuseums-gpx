@@ -5,6 +5,8 @@ and last winter i wasted too much time manually pinning museum locations in [Goo
 
 This repo is an effort to have content of [Automuseums.info](https://automuseums.info) website as GPX files.
 
+Download generated GPX files here: [https://automuseums.tldrtravel.info](https://automuseums.tldrtravel.info)
+
 ## Development environment
 
 ### venv-based
