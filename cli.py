@@ -291,7 +291,7 @@ for country in country_indexes:
     gpx.name = f"Automuseums.info: {country['country']['name']}"
     gpx.description = f"Generated using {gpx.creator}"
     gpx.link = country['country']['absolute_url']
-    gpx.time = datetime.datetime.now(datetime.UTC)
+    gpx.time = datetime.datetime.now(datetime.timezone.utc)
 
     def create_gpx_waypoint(museum):
         gpx_wps = gpxpy.gpx.GPXWaypoint()
