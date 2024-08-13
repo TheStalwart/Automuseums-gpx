@@ -1,4 +1,5 @@
 import argparse
+import datetime
 from functools import reduce
 import glob
 import json
@@ -11,6 +12,8 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import rich
+import gpxpy
+import gpxpy.gpx
 
 # Define source URL
 WEBSITE_ROOT_URL = 'https://automuseums.info'
@@ -23,6 +26,9 @@ CACHE_ROOT = os.path.join(PROJECT_ROOT, "cache")
 COUNTRY_CACHE_MAX_AGE_MINUTES = 55
 INDEX_CACHE_MAX_AGE_HOURS = 24
 MUSEUM_CACHE_MAX_AGE_HOURS = 48
+
+# Define output properties
+OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
 
 def load_countries():
     cache_file_path = os.path.join(CACHE_ROOT, 'homepage.html')
@@ -230,7 +236,7 @@ def parse_museum_page(page):
 
     return { 'description': museum_description, 'drupal_node_id': drupal_node_id, 'coordinates': coordinates }
 
-# Ensure cache_root exists
+# Ensure CACHE_ROOT exists
 if not os.path.isdir(CACHE_ROOT):
     os.mkdir(CACHE_ROOT)
 
@@ -272,3 +278,34 @@ for country in country_indexes:
         museum_properties.update(parse_museum_page(page))
 
 rich.print(country_indexes)
+
+# Ensure OUTPUT_ROOT exists
+if not os.path.isdir(OUTPUT_ROOT):
+    os.mkdir(OUTPUT_ROOT)
+
+# Generate per-country GPX files
+# https://github.com/tkrajina/gpxpy/blob/dev/examples/waypoints_example.py
+for country in country_indexes:
+    gpx = gpxpy.gpx.GPX()
+    gpx.creator = 'https://github.com/TheStalwart/Automuseums-gpx'
+    gpx.name = f"Automuseums.info: {country['country']['name']}"
+    gpx.description = f"Generated using {gpx.creator}"
+    gpx.link = country['country']['absolute_url']
+    gpx.time = datetime.datetime.now(datetime.UTC)
+
+    def create_gpx_waypoint(museum):
+        gpx_wps = gpxpy.gpx.GPXWaypoint()
+        gpx_wps.latitude = museum['coordinates'][0]['lat'] # WARNING: does not cover multi-location museums atm
+        gpx_wps.longitude = museum['coordinates'][0]['lon'] # WARNING: does not cover multi-location museums atm
+        gpx_wps.symbol = "Museum"
+        gpx_wps.name = museum['name']
+        gpx_wps.description = museum['description']
+        return gpx_wps
+    
+    gpx.waypoints.extend(list(map(create_gpx_waypoint, country['museums'])))
+
+    output_file_name = f"{selected_country['name']}.gpx"
+    output_file_path = os.path.join(OUTPUT_ROOT, output_file_name)
+    print(f"Generated {output_file_name}")
+    with open(output_file_path, "w") as f:
+        f.write(gpx.to_xml())
