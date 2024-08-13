@@ -1,4 +1,5 @@
 import argparse
+from functools import reduce
 import glob
 import json
 import math
@@ -150,7 +151,14 @@ def parse_country_index(pages):
 
         museums.extend(list(map(define_museum_properties, museum_blocks)))
 
-    return museums
+    # Deduplicate entries, 
+    # because museum list pages return dupes of museums that have multiple locations.
+    # e.g. the following museum https://automuseums.info/czech-republic/museum-historical-motorcycles
+    # is listed 3x times on https://automuseums.info/museums/Czechia?page=4
+
+    unique_museums = reduce(lambda l, x: l.append(x) or l if x not in l else l, museums, []) # https://stackoverflow.com/a/37163210
+
+    return unique_museums
 
 def load_museum_page(country, museum_properties):
     cache_museum_root_path = os.path.join(country['cache_path'], 'museums')
