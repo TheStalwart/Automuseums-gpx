@@ -304,6 +304,7 @@ for country in country_indexes:
         gpx_wps.symbol = "Museum"
         gpx_wps.name = museum['name']
         gpx_wps.description = museum['description']
+        gpx_wps.link = museum['absolute_url']
         return gpx_wps
     
     gpx.waypoints.extend(list(map(create_gpx_waypoint, country['museums'])))
