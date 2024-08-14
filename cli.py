@@ -249,6 +249,7 @@ readable_country_list = ', '.join(map(lambda country: country['name'], countries
 arg_parser = argparse.ArgumentParser(epilog=f"Available countries: {readable_country_list}")
 arg_parser.add_argument('--country', help='Limit scrape to one country')
 arg_parser.add_argument('--lowprofile', action='store_true')
+arg_parser.add_argument('--verbose', action='store_true')
 args = arg_parser.parse_args()
 
 country_indexes = []
@@ -276,8 +277,11 @@ for country in country_indexes:
         page, cache_file_path = load_museum_page(country['country'], museum_properties)
         museum_properties['cache_file_path'] = cache_file_path
         museum_properties.update(parse_museum_page(page))
+    if not args.verbose:
+        print(f"Parsed {country['country']['name']}: {len(country['museums'])} museums")
 
-rich.print(country_indexes)
+if args.verbose:
+    rich.print(country_indexes)
 
 # Ensure OUTPUT_ROOT exists
 if not os.path.isdir(OUTPUT_ROOT):

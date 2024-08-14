@@ -24,7 +24,9 @@
 				"request": "launch",
 				"program": "cli.py",
 				"console": "integratedTerminal",
-				"args": [],
+				"args": [
+					"--verbose"
+				],
 			},
 			{
 				"name": "Python Debugger: Low Profile mode",
@@ -33,6 +35,7 @@
 				"program": "cli.py",
 				"console": "integratedTerminal",
 				"args": [
+					"--verbose",
 					"--lowprofile"
 				],
 			},
@@ -43,6 +46,7 @@
 				"program": "cli.py",
 				"console": "integratedTerminal",
 				"args": [
+					"--verbose",
 					"--country", "United States"
 				],
 			},
@@ -53,6 +57,7 @@
 				"program": "cli.py",
 				"console": "integratedTerminal",
 				"args": [
+					"--verbose",
 					"--country", "Czechia"
 				],
 			},
@@ -63,6 +68,7 @@
 				"program": "cli.py",
 				"console": "integratedTerminal",
 				"args": [
+					"--verbose",
 					"--country", "Estonia"
 				],
 			},
@@ -73,6 +79,7 @@
 				"program": "cli.py",
 				"console": "integratedTerminal",
 				"args": [
+					"--verbose",
 					"--country", "Jordan"
 				],
 			}
