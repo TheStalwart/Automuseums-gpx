@@ -283,10 +283,6 @@ for country in country_indexes:
 if args.verbose:
     rich.print(country_indexes)
 
-# Ensure OUTPUT_ROOT exists
-if not os.path.isdir(OUTPUT_ROOT):
-    os.mkdir(OUTPUT_ROOT)
-
 # Generate per-country GPX files
 # https://github.com/tkrajina/gpxpy/blob/dev/examples/waypoints_example.py
 for country in country_indexes:
