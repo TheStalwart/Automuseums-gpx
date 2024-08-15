@@ -271,6 +271,7 @@ else:
             country_indexes.append(download_country_index(selected_country))
 
 for country in country_indexes:
+    print(f"Loading museums of {country['country']['name']}...")
     for museum_properties in country['museums']:
         page, cache_file_path = load_museum_page(country['country'], museum_properties)
         museum_properties['cache_file_path'] = cache_file_path
