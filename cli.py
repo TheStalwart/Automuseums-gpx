@@ -304,7 +304,7 @@ for country in country_indexes:
     
     gpx.waypoints.extend(list(map(create_gpx_waypoint, country['museums'])))
 
-    output_file_name = f"{selected_country['name']}.gpx"
+    output_file_name = f"{country['country']['name']}.gpx"
     output_file_path = os.path.join(OUTPUT_ROOT, output_file_name)
     print(f"Generated {output_file_name}")
     with open(output_file_path, "w") as f:
