@@ -23,9 +23,6 @@ PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
 
 # Define cache properties
 CACHE_ROOT = os.path.join(PROJECT_ROOT, "cache")
-COUNTRY_CACHE_MAX_AGE_MINUTES = 55
-INDEX_CACHE_MAX_AGE_HOURS = 24
-MUSEUM_CACHE_MAX_AGE_HOURS = 48
 
 # Define output properties
 OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
@@ -51,9 +48,9 @@ def load_countries():
         current_timestamp = time.time()
         cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
         cache_file_age_minutes = math.floor(cache_file_age_seconds / 60)
-        print(f"Country cache file is {cache_file_age_minutes} minutes old")
+        print(f"Country cache file is {cache_file_age_minutes}/{args.cache_ttl_countrylist} minutes old")
 
-        if cache_file_age_minutes < COUNTRY_CACHE_MAX_AGE_MINUTES:
+        if cache_file_age_minutes < args.cache_ttl_countrylist:
             print("Loading cached country list...")
             with open(cache_file_path, 'r') as f:
                 html_contents = f.read()
@@ -125,9 +122,9 @@ def download_country_index(selected_country):
         current_timestamp = time.time()
         cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
-        print(f"{selected_country['name']} index cache is {cache_file_age_hours} hours old")
+        print(f"{selected_country['name']} index cache is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old")
 
-        if cache_file_age_hours < INDEX_CACHE_MAX_AGE_HOURS:
+        if cache_file_age_hours < args.cache_ttl_museumlist:
             print("Loading cached index...")
             index_pages = []
             
@@ -209,8 +206,8 @@ def load_museum_page(country, museum_properties):
         cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
 
-        if cache_file_age_hours < MUSEUM_CACHE_MAX_AGE_HOURS:
-            print(f"Loading {cache_file_age_hours} hours old cached museum page for {museum_properties['name']}...")
+        if cache_file_age_hours < args.cache_ttl_museumpage:
+            print(f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old cached museum page for {museum_properties['name']}...")
             with open(cache_file_path, 'r') as f:
                 html_contents = f.read()
                 return BeautifulSoup(html_contents, 'html.parser'), cache_file_path
@@ -240,23 +237,24 @@ def parse_museum_page(page):
 if not os.path.isdir(CACHE_ROOT):
     os.mkdir(CACHE_ROOT)
 
-# Refresh country list
-countries = load_countries()
-# rich.print(countries)
-
 # Build ArgumentParser https://docs.python.org/3/library/argparse.html
-readable_country_list = ', '.join(map(lambda country: country['name'], countries))
-arg_parser = argparse.ArgumentParser(epilog=f"Available countries: {readable_country_list}")
+arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--country', help='Limit scrape to one country')
+arg_parser.add_argument('--cache-ttl-countrylist', type=int, default=55, help='Override country list cache time-to-live in minutes (default: %(default)s)')
+arg_parser.add_argument('--cache-ttl-museumlist', type=int, default=24, help='Override museum list cache time-to-live in hours (default: %(default)s)')
+arg_parser.add_argument('--cache-ttl-museumpage', type=int, default=48, help='Override museum page cache time-to-live in hours (default: %(default)s)')
 arg_parser.add_argument('--lowprofile', action='store_true')
-arg_parser.add_argument('--verbose', action='store_true')
+arg_parser.add_argument('--verbose', action='store_true', help='Print data used to generate GPX files')
 args = arg_parser.parse_args()
 
+# Refresh country list
+countries = load_countries()
 country_indexes = []
 
 if args.country:
     country_search_results = list(filter(lambda c: c['name'] == args.country, countries))
     if len(country_search_results) < 1:
+        readable_country_list = ', '.join(map(lambda country: country['name'], countries))
         sys.exit(f"Country \"{args.country}\" not found.\n\nTry any of these: {readable_country_list}")
 
     selected_country = country_search_results[0]
