@@ -130,7 +130,7 @@ def download_country_index(selected_country):
             
             sorted_cache_file_path_array = sorted(glob.glob(os.path.join(cache_country_path, "[0-9]*.html")))
             for cache_file_path in sorted_cache_file_path_array:
-                print(f"Loading contents of {cache_file_path}...")
+                print(f"Loading cache from {cache_file_path}...")
                 with open(cache_file_path, 'r') as f:
                     html_contents = f.read()
                     soup = BeautifulSoup(html_contents, 'html.parser')
