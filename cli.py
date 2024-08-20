@@ -23,6 +23,7 @@ PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
 
 # Define cache properties
 CACHE_ROOT = os.path.join(PROJECT_ROOT, "cache")
+CACHE_COUNTRY_ROOT = os.path.join(CACHE_ROOT, 'countries')
 
 # Define output properties
 OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
@@ -63,22 +64,15 @@ def load_countries():
 
     def define_country_properties(a_tag):
         name = a_tag.contents[0].strip()
-        return { 'name': name, 'relative_url': a_tag['href'], 'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}" }
+        return { 'name': name, 'relative_url': a_tag['href'], 'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}", 'cache_path': os.path.join(CACHE_COUNTRY_ROOT, name) }
 
     property_list = list(map(define_country_properties, countries))
 
     return property_list
 
 def download_country_index(selected_country):
-    cache_country_root_path = os.path.join(CACHE_ROOT, 'countries')
-    if not os.path.isdir(cache_country_root_path):
-        os.mkdir(cache_country_root_path)
-
-    cache_country_path = os.path.join(cache_country_root_path, selected_country['name'])
-    if not os.path.isdir(cache_country_path):
-        os.mkdir(cache_country_path)
-
-    selected_country['cache_path'] = cache_country_path
+    if not os.path.isdir(selected_country['cache_path']):
+        os.mkdir(selected_country['cache_path'])
 
     def format_return_value(index):
         return { 'country': selected_country, 'museums': index }
@@ -88,7 +82,7 @@ def download_country_index(selected_country):
         index_pages = []
 
         # Delete old cache
-        for old_cache_file in glob.glob(os.path.join(cache_country_path, "[0-9]*.html")):
+        for old_cache_file in sorted(glob.glob(os.path.join(selected_country['cache_path'], "[0-9]*.html"))):
             print(f"Deleting old cache file: {old_cache_file}")
             os.remove(old_cache_file)
 
@@ -96,7 +90,7 @@ def download_country_index(selected_country):
         museum_list_url = f"{WEBSITE_ROOT_URL}{selected_country['relative_url']}"
         for page_index in range(100): # make sure we never get stuck in infinite loop
             cached_file_name = f"{page_index}.html".rjust(7, '0') # make all page numbers double-digits for easier sorting when loading cache
-            cached_page_path = os.path.join(cache_country_path, cached_file_name)
+            cached_page_path = os.path.join(selected_country['cache_path'], cached_file_name)
             r = requests.get(museum_list_url, params={'page': page_index})
             print(f"Downloaded {r.url}")
             page_contents = r.text
@@ -114,7 +108,7 @@ def download_country_index(selected_country):
 
         return index_pages
 
-    cache_file_path = os.path.join(cache_country_path, "00.html")
+    cache_file_path = os.path.join(selected_country['cache_path'], "00.html")
     if not os.path.isfile(cache_file_path):
         return format_return_value(parse_country_index(download_index()))
     else:
@@ -233,9 +227,11 @@ def parse_museum_page(page):
 
     return { 'description': museum_description, 'drupal_node_id': drupal_node_id, 'coordinates': coordinates }
 
-# Ensure CACHE_ROOT exists
+# Ensure cache folders exist
 if not os.path.isdir(CACHE_ROOT):
     os.mkdir(CACHE_ROOT)
+if not os.path.isdir(CACHE_COUNTRY_ROOT):
+    os.mkdir(CACHE_COUNTRY_ROOT)
 
 # Build ArgumentParser https://docs.python.org/3/library/argparse.html
 arg_parser = argparse.ArgumentParser()
