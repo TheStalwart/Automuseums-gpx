@@ -64,7 +64,20 @@ def load_countries():
 
     def define_country_properties(a_tag):
         name = a_tag.contents[0].strip()
-        return { 'name': name, 'relative_url': a_tag['href'], 'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}", 'cache_path': os.path.join(CACHE_COUNTRY_ROOT, name) }
+
+        cache_path = os.path.join(CACHE_COUNTRY_ROOT, name)
+        cache_file_path = os.path.join(cache_path, "00.html")
+        cache_timestamp = 0 # countries with missing cache will keep 0 and be first in queue to update in lowprofile mode
+        if os.path.isfile(cache_file_path):
+            cache_timestamp = os.path.getmtime(cache_file_path)
+
+        return { 
+            'name': name,
+            'relative_url': a_tag['href'], 
+            'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}",
+            'cache_path': cache_path,
+            'cache_timestamp': cache_timestamp,
+        }
 
     property_list = list(map(define_country_properties, countries))
 
@@ -112,9 +125,8 @@ def download_country_index(selected_country):
     if not os.path.isfile(cache_file_path):
         return format_return_value(parse_country_index(download_index()))
     else:
-        cache_file_modification_timestamp = os.path.getmtime(cache_file_path)
         current_timestamp = time.time()
-        cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
+        cache_file_age_seconds = current_timestamp - selected_country['cache_timestamp']
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
         print(f"{selected_country['name']} index cache is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old")
 
@@ -239,7 +251,7 @@ arg_parser.add_argument('--country', help='Limit scrape to one country')
 arg_parser.add_argument('--cache-ttl-countrylist', type=int, default=55, help='Override country list cache time-to-live in minutes (default: %(default)s)')
 arg_parser.add_argument('--cache-ttl-museumlist', type=int, default=24, help='Override museum list cache time-to-live in hours (default: %(default)s)')
 arg_parser.add_argument('--cache-ttl-museumpage', type=int, default=48, help='Override museum page cache time-to-live in hours (default: %(default)s)')
-arg_parser.add_argument('--lowprofile', action='store_true')
+arg_parser.add_argument('--lowprofile', action='store_true', help='Update 1 country with oldest cache')
 arg_parser.add_argument('--verbose', action='store_true', help='Print data used to generate GPX files')
 args = arg_parser.parse_args()
 
@@ -257,9 +269,8 @@ if args.country:
     country_indexes.append(download_country_index(selected_country))
 else:
     if args.lowprofile:
-        print('Keeping low profile, updating one random country index...')
-        selected_country = random.choice(countries)
-        # In the future, i want this mode to update country index with oldest/absent cache
+        print('Keeping low profile, updating 1 country with oldest cache...')
+        selected_country = sorted(countries, key=lambda c: c['cache_timestamp'])[0]
         country_indexes.append(download_country_index(selected_country))
     else:
         print('Updating all country indexes...')
