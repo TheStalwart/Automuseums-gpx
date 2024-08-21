@@ -40,7 +40,7 @@ def load_countries():
             f.write(homepage_contents)
 
         return homepage_contents
-    
+
     html_contents = ''
     if not os.path.isfile(cache_file_path):
         html_contents = download_homepage()
@@ -71,9 +71,9 @@ def load_countries():
         if os.path.isfile(cache_file_path):
             cache_timestamp = os.path.getmtime(cache_file_path)
 
-        return { 
+        return {
             'name': name,
-            'relative_url': a_tag['href'], 
+            'relative_url': a_tag['href'],
             'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}",
             'cache_path': cache_path,
             'cache_timestamp': cache_timestamp,
@@ -133,7 +133,7 @@ def download_country_index(selected_country):
         if cache_file_age_hours < args.cache_ttl_museumlist:
             print("Loading cached index...")
             index_pages = []
-            
+
             sorted_cache_file_path_array = sorted(glob.glob(os.path.join(selected_country['cache_path'], "[0-9]*.html")))
             for cache_file_path in sorted_cache_file_path_array:
                 print(f"Loading cache from {cache_file_path}...")
@@ -142,11 +142,11 @@ def download_country_index(selected_country):
                     soup = BeautifulSoup(html_contents, 'html.parser')
 
                     index_pages.append(soup)
-            
+
             return format_return_value(parse_country_index(index_pages))
         else:
             return format_return_value(parse_country_index(download_index()))
-        
+
 def parse_country_index(pages):
     museums = []
 
@@ -160,7 +160,7 @@ def parse_country_index(pages):
 
         museums.extend(list(map(define_museum_properties, museum_blocks)))
 
-    # Deduplicate entries, 
+    # Deduplicate entries,
     # because museum list pages return dupes of museums that have multiple locations.
     # e.g. the following museum https://automuseums.info/czech-republic/museum-historical-motorcycles
     # is listed 3x times on https://automuseums.info/museums/Czechia?page=4
@@ -181,13 +181,13 @@ def load_museum_page(country, museum_properties):
     # https://automuseums.info/index.php/czech-republic/fire-brigade-museum-p%C5%99ibyslav
 
     # Also, some entries are listed multiple times on country index page,
-    # e.g. https://automuseums.info/czech-republic/museum-historical-motorcycles 
+    # e.g. https://automuseums.info/czech-republic/museum-historical-motorcycles
     # is listed 3x times on https://automuseums.info/museums/Czechia?page=4 as of Aug 11th 2024,
     # all 3x entries have the same page link, but that page lists 3x locations.
     # This needs to be exported as 3x different placemarks in GPX file.
 
     # A few days after that code was written,
-    # i discovered every museum page has data-history-node-id, 
+    # i discovered every museum page has data-history-node-id,
     # and museum pages can be loaded by /node/ID URLs, e.g. https://automuseums.info/node/1893
 
     name_slug = museum_properties['relative_url'].split('/')[-1] # always use last slug because there could be "/index.php/" in the middle
@@ -219,7 +219,7 @@ def load_museum_page(country, museum_properties):
                 return BeautifulSoup(html_contents, 'html.parser'), cache_file_path
         else:
             return download_page(), cache_file_path
-        
+
 def parse_museum_page(page):
     museum_description = ''
     body_div = page.find(class_='node-content').find(class_='field--name-body')
@@ -308,7 +308,7 @@ for country in country_indexes:
         gpx_wps.description = museum['description']
         gpx_wps.link = museum['absolute_url']
         return gpx_wps
-    
+
     gpx.waypoints.extend(list(map(create_gpx_waypoint, country['museums'])))
 
     output_file_name = f"{country['country']['name']}.gpx"
