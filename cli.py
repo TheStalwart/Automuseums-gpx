@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 import rich
 import gpxpy
 import gpxpy.gpx
+import sentry_sdk
 
 # Define source URL
 WEBSITE_ROOT_URL = 'https://automuseums.info'
@@ -238,6 +239,21 @@ def parse_museum_page(page):
     coordinates = list(map(lambda p: { 'lat': p['lat'], 'lon': p['lon'] }, leaflet_points))
 
     return { 'description': museum_description, 'drupal_node_id': drupal_node_id, 'coordinates': coordinates }
+
+# Init Sentry before doing anything that might raise exception
+try:
+    sentry_sdk.init(
+        dsn=pathlib.Path(os.path.join(PROJECT_ROOT, "sentry.dsn")).read_text(),
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+    )
+except:
+    pass
 
 # Ensure cache folders exist
 if not os.path.isdir(CACHE_ROOT):
