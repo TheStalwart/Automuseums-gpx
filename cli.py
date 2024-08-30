@@ -15,6 +15,8 @@ import rich
 import gpxpy
 import gpxpy.gpx
 import sentry_sdk
+from sentry_sdk.crons import capture_checkin
+from sentry_sdk.crons.consts import MonitorStatus
 
 # Define source URL
 WEBSITE_ROOT_URL = 'https://automuseums.info'
@@ -271,6 +273,14 @@ arg_parser.add_argument('--lowprofile', action='store_true', help='Update 1 coun
 arg_parser.add_argument('--verbose', action='store_true', help='Print data used to generate GPX files')
 args = arg_parser.parse_args()
 
+sentry_lowprofile_slug = 'lowprofile'
+sentry_check_in_id = ''
+if args.lowprofile:
+    sentry_check_in_id = capture_checkin(
+        monitor_slug=sentry_lowprofile_slug,
+        status=MonitorStatus.IN_PROGRESS,
+    )
+
 # Refresh country list
 countries = load_countries()
 country_indexes = []
@@ -332,3 +342,10 @@ for country in country_indexes:
     print(f"Generated {output_file_name}")
     with open(output_file_path, "w") as f:
         f.write(gpx.to_xml())
+
+if args.lowprofile:
+    capture_checkin(
+        monitor_slug=sentry_lowprofile_slug,
+        check_in_id=sentry_check_in_id,
+        status=MonitorStatus.OK,
+    )
