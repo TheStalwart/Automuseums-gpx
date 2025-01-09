@@ -39,7 +39,7 @@ def load_countries():
         r = requests.get(f"{WEBSITE_ROOT_URL}/homepage")
         homepage_contents = r.text
 
-        with open(cache_file_path, "w") as f:
+        with open(cache_file_path, "w", encoding="utf-8") as f:
             f.write(homepage_contents)
 
         return homepage_contents
@@ -56,7 +56,7 @@ def load_countries():
 
         if cache_file_age_minutes < args.cache_ttl_countrylist:
             print("Loading cached country list...")
-            with open(cache_file_path, 'r') as f:
+            with open(cache_file_path, 'r', encoding="utf-8") as f:
                 html_contents = f.read()
         else:
             html_contents = download_homepage()
@@ -111,7 +111,7 @@ def download_country_index(selected_country):
             print(f"Downloaded {r.url}")
             page_contents = r.text
 
-            with open(cached_page_path, "w") as f:
+            with open(cached_page_path, "w", encoding="utf-8") as f:
                 f.write(page_contents)
 
             soup = BeautifulSoup(page_contents, 'html.parser')
@@ -140,7 +140,7 @@ def download_country_index(selected_country):
             sorted_cache_file_path_array = sorted(glob.glob(os.path.join(selected_country['cache_path'], "[0-9]*.html")))
             for cache_file_path in sorted_cache_file_path_array:
                 print(f"Loading cache from {cache_file_path}...")
-                with open(cache_file_path, 'r') as f:
+                with open(cache_file_path, 'r', encoding="utf-8") as f:
                     html_contents = f.read()
                     soup = BeautifulSoup(html_contents, 'html.parser')
 
@@ -202,7 +202,7 @@ def load_museum_page(country, museum_properties):
         print(f"Downloaded {r.url}")
         page_contents = r.text
 
-        with open(cache_file_path, "w") as f:
+        with open(cache_file_path, "w", encoding="utf-8") as f:
             f.write(page_contents)
 
         return BeautifulSoup(page_contents, 'html.parser')
@@ -217,7 +217,7 @@ def load_museum_page(country, museum_properties):
 
         if cache_file_age_hours < args.cache_ttl_museumpage:
             print(f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old cached museum page for {museum_properties['name']}...")
-            with open(cache_file_path, 'r') as f:
+            with open(cache_file_path, 'r', encoding="utf-8") as f:
                 html_contents = f.read()
                 return BeautifulSoup(html_contents, 'html.parser'), cache_file_path
         else:
@@ -340,7 +340,7 @@ for country in country_indexes:
     output_file_name = f"{country['country']['name']}.gpx"
     output_file_path = os.path.join(OUTPUT_ROOT, output_file_name)
     print(f"Generated {output_file_name}")
-    with open(output_file_path, "w") as f:
+    with open(output_file_path, "w", encoding="utf-8") as f:
         f.write(gpx.to_xml())
 
 if args.lowprofile:
