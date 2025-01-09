@@ -76,6 +76,7 @@
 			},
 			{
 				"name": "Python Debugger: Jordan only",
+				// 1 museum, page contains non-ASCII symbols
 				"type": "debugpy",
 				"request": "launch",
 				"program": "cli.py",
@@ -83,6 +84,18 @@
 				"args": [
 					"--verbose",
 					"--country", "Jordan"
+				],
+			},
+			{
+				"name": "Python Debugger: Ghana only",
+				// 0 museums, but is mentioned on the website's country list
+				"type": "debugpy",
+				"request": "launch",
+				"program": "cli.py",
+				"console": "integratedTerminal",
+				"args": [
+					"--verbose",
+					"--country", "Ghana"
 				],
 			}
 		]
