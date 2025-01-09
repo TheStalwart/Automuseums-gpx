@@ -331,7 +331,11 @@ for country in country_indexes:
         gpx_wps.longitude = museum['coordinates'][0]['lon'] # WARNING: does not cover multi-location museums atm
         gpx_wps.symbol = "Museum"
         gpx_wps.name = museum['name']
-        gpx_wps.description = museum['description']
+
+        # Google My Maps ignores <link> tags in Waypoints when importing,
+        # so add an extra copy of the link at the end of <desc> tag
+        gpx_wps.description = f"{museum['description']}\n\n{museum['absolute_url']}"
+
         gpx_wps.link = museum['absolute_url']
         return gpx_wps
 
