@@ -10,6 +10,7 @@ Download generated GPX files here: [https://automuseums.tldrtravel.info](https:/
 ## Development environment
 
 ### venv-based
+
 To create venv:
 `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
 
