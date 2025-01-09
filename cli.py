@@ -343,9 +343,13 @@ for country in country_indexes:
 
     output_file_name = f"{country['country']['name']}.gpx"
     output_file_path = os.path.join(OUTPUT_ROOT, output_file_name)
-    print(f"Generated {output_file_name}")
-    with open(output_file_path, "w", encoding="utf-8") as f:
-        f.write(gpx.to_xml())
+
+    if len(gpx.waypoints) > 0:
+        with open(output_file_path, "w", encoding="utf-8") as f:
+            f.write(gpx.to_xml())
+        print(f"Generated {output_file_name}")
+    else:
+        print(f"Not generating {output_file_name} due to {len(gpx.waypoints)} museums in {country['country']['name']}")
 
 if args.lowprofile:
     capture_checkin(
