@@ -69,6 +69,12 @@ def load_countries():
     def define_country_properties(a_tag):
         name = a_tag.contents[0].strip()
 
+        relative_url = a_tag['href']
+        # A link to Bosnia on the main page contains invalid (non-urlencoded) href value.
+        # It's one specific invalid value, all other country links e.g. "New Zealand" are urlencoded.
+        if "&Herze" in relative_url:
+            relative_url = quote(relative_url)
+
         cache_path = os.path.join(CACHE_COUNTRY_ROOT, name)
         cache_file_path = os.path.join(cache_path, "00.html")
         cache_timestamp = 0 # countries with missing cache will keep 0 and be first in queue to update in lowprofile mode
@@ -77,12 +83,8 @@ def load_countries():
 
         return {
             'name': name,
-
-            # Make sure values like "/museums/Bosnia&Herzegovina" are urlencoded,
-            # otherwise gpxpy outputs invalid XML
-            'relative_url': quote(a_tag['href']),
-            'absolute_url': f"{WEBSITE_ROOT_URL}{quote(a_tag['href'])}",
-
+            'relative_url': relative_url,
+            'absolute_url': f"{WEBSITE_ROOT_URL}{relative_url}",
             'cache_path': cache_path,
             'cache_timestamp': cache_timestamp,
         }
