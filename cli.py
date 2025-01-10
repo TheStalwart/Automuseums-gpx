@@ -17,6 +17,7 @@ import gpxpy.gpx
 import sentry_sdk
 from sentry_sdk.crons import capture_checkin
 from sentry_sdk.crons.consts import MonitorStatus
+from urllib.parse import quote
 
 # Define source URL
 WEBSITE_ROOT_URL = 'https://automuseums.info'
@@ -76,8 +77,12 @@ def load_countries():
 
         return {
             'name': name,
-            'relative_url': a_tag['href'],
-            'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}",
+
+            # Make sure values like "/museums/Bosnia&Herzegovina" are urlencoded,
+            # otherwise gpxpy outputs invalid XML
+            'relative_url': quote(a_tag['href']),
+            'absolute_url': f"{WEBSITE_ROOT_URL}{quote(a_tag['href'])}",
+
             'cache_path': cache_path,
             'cache_timestamp': cache_timestamp,
         }
