@@ -126,7 +126,20 @@
           "--country",
           "Bosnia"
         ]
-      }
+      },
+      {
+        "name": "Python Debugger: New Zealand only",
+        // contains "unusual line separators"
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose",
+          "--country",
+          "New Zealand"
+        ]
+      },
     ]
   }
 }
