@@ -1,103 +1,132 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {
-		"files.trimTrailingWhitespace": true
-	},
-	"launch": {
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"name": "Python Debugger: Print help",
-				"type": "debugpy",
-				"request": "launch",
-				"program": "cli.py",
-				"console": "integratedTerminal",
-				"args": [
-					"-h"
-				],
-			},
-			{
-				"name": "Python Debugger: No arguments",
-				"type": "debugpy",
-				"request": "launch",
-				"program": "cli.py",
-				"console": "integratedTerminal",
-				"args": [
-					"--verbose"
-				],
-			},
-			{
-				"name": "Python Debugger: Low Profile mode",
-				"type": "debugpy",
-				"request": "launch",
-				"program": "cli.py",
-				"console": "integratedTerminal",
-				"args": [
-					"--verbose",
-					"--lowprofile"
-				],
-			},
-			{
-				"name": "Python Debugger: US only",
-				"type": "debugpy",
-				"request": "launch",
-				"program": "cli.py",
-				"console": "integratedTerminal",
-				"args": [
-					"--verbose",
-					"--country", "United States"
-				],
-			},
-			{
-				"name": "Python Debugger: CZ only",
-				"type": "debugpy",
-				"request": "launch",
-				"program": "cli.py",
-				"console": "integratedTerminal",
-				"args": [
-					"--verbose",
-					"--country", "Czechia"
-				],
-			},
-			{
-				"name": "Python Debugger: Estonia only",
-				"type": "debugpy",
-				"request": "launch",
-				"program": "cli.py",
-				"console": "integratedTerminal",
-				"args": [
-					"--verbose",
-					"--country", "Estonia"
-				],
-			},
-			{
-				"name": "Python Debugger: Jordan only",
-				// 1 museum, page contains non-ASCII symbols
-				"type": "debugpy",
-				"request": "launch",
-				"program": "cli.py",
-				"console": "integratedTerminal",
-				"args": [
-					"--verbose",
-					"--country", "Jordan"
-				],
-			},
-			{
-				"name": "Python Debugger: Ghana only",
-				// 0 museums, but is mentioned on the website's country list
-				"type": "debugpy",
-				"request": "launch",
-				"program": "cli.py",
-				"console": "integratedTerminal",
-				"args": [
-					"--verbose",
-					"--country", "Ghana"
-				],
-			}
-		]
-	}
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.trimTrailingWhitespace": true,
+    "files.eol": "\n",
+    "[jsonc]": {
+      "editor.formatOnSave": true,
+      "editor.tabSize": 2,
+      "editor.defaultFormatter": "vscode.json-language-features",
+      // When opening a file, `editor.tabSize` and `editor.insertSpaces`
+      // will be detected based on the file contents. Set to false to keep
+      // the values you've explicitly set, above.
+      // https://stackoverflow.com/a/29972553
+      "editor.detectIndentation": false
+    }
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python Debugger: Print help",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "-h"
+        ]
+      },
+      {
+        "name": "Python Debugger: No arguments",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose"
+        ]
+      },
+      {
+        "name": "Python Debugger: Low Profile mode",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose",
+          "--lowprofile"
+        ]
+      },
+      {
+        "name": "Python Debugger: US only",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose",
+          "--country",
+          "United States"
+        ]
+      },
+      {
+        "name": "Python Debugger: CZ only",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose",
+          "--country",
+          "Czechia"
+        ]
+      },
+      {
+        "name": "Python Debugger: Estonia only",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose",
+          "--country",
+          "Estonia"
+        ]
+      },
+      {
+        "name": "Python Debugger: Jordan only",
+        // 1 museum, page contains non-ASCII symbols
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose",
+          "--country",
+          "Jordan"
+        ]
+      },
+      {
+        "name": "Python Debugger: Ghana only",
+        // 0 museums, but is mentioned on the website's country list
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose",
+          "--country",
+          "Ghana"
+        ]
+      },
+      {
+        "name": "Python Debugger: Bosnia only",
+        // contains ampersand in country URL
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose",
+          "--country",
+          "Bosnia"
+        ]
+      }
+    ]
+  }
 }
