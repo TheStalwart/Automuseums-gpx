@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "DavidAnson.vscode-markdownlint",
+    "eamodio.gitlens",
+    "redhat.vscode-xml"
+  ]
+}
