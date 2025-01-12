@@ -14,5 +14,5 @@ Download generated GPX files here: [https://automuseums.tldrtravel.info](https:/
 To create venv:
 `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
 
-To run in lowprofile mode:
-`.venv/bin/python3 cli.py --lowprofile`
+To run in lowprofile mode and regenerate grouped GPX:
+`.venv/bin/python3 cli.py --lowprofile --group`
