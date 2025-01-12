@@ -2,6 +2,7 @@ import argparse
 import datetime
 from functools import reduce
 import glob
+from itertools import chain
 import json
 import math
 import os
@@ -18,12 +19,14 @@ import sentry_sdk
 from sentry_sdk.crons import capture_checkin
 from sentry_sdk.crons.consts import MonitorStatus
 from urllib.parse import quote
+import yaml
 
 # Define source URL
 WEBSITE_ROOT_URL = 'https://automuseums.info'
 
 # Define file paths
 PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
+CONFIG_GROUP_FILENAME = "regions.yaml"
 
 # Define cache properties
 CACHE_ROOT = os.path.join(PROJECT_ROOT, "cache")
@@ -31,6 +34,10 @@ CACHE_COUNTRY_ROOT = os.path.join(CACHE_ROOT, 'countries')
 
 # Define output properties
 OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
+OUTPUT_ROOT_PER_COUNTRY = os.path.join(OUTPUT_ROOT, "per-country")
+OUTPUT_ROOT_GROUPED = os.path.join(OUTPUT_ROOT, "grouped-by-region")
+
+GPX_CREATOR = 'https://github.com/TheStalwart/Automuseums-gpx'
 
 def load_countries():
     cache_file_path = os.path.join(CACHE_ROOT, 'homepage.html')
@@ -277,6 +284,7 @@ arg_parser.add_argument('--cache-ttl-countrylist', type=int, default=55, help='O
 arg_parser.add_argument('--cache-ttl-museumlist', type=int, default=24, help='Override museum list cache time-to-live in hours (default: %(default)s)')
 arg_parser.add_argument('--cache-ttl-museumpage', type=int, default=48, help='Override museum page cache time-to-live in hours (default: %(default)s)')
 arg_parser.add_argument('--lowprofile', action='store_true', help='Update 1 country with oldest cache')
+arg_parser.add_argument('--group', action='store_true', help='Generate files grouped by region')
 arg_parser.add_argument('--verbose', action='store_true', help='Print data used to generate GPX files')
 args = arg_parser.parse_args()
 
@@ -326,7 +334,7 @@ if args.verbose:
 # https://github.com/tkrajina/gpxpy/blob/dev/examples/waypoints_example.py
 for country in country_indexes:
     gpx = gpxpy.gpx.GPX()
-    gpx.creator = 'https://github.com/TheStalwart/Automuseums-gpx'
+    gpx.creator = GPX_CREATOR
     gpx.name = f"Automuseums.info: {country['country']['name']}"
     gpx.description = f"Generated using {gpx.creator}"
     gpx.link = country['country']['absolute_url']
@@ -348,8 +356,11 @@ for country in country_indexes:
 
     gpx.waypoints.extend(list(map(create_gpx_waypoint, country['museums'])))
 
+    if not os.path.isdir(OUTPUT_ROOT_PER_COUNTRY):
+        os.mkdir(OUTPUT_ROOT_PER_COUNTRY)
+
     output_file_name = f"{country['country']['name']}.gpx"
-    output_file_path = os.path.join(OUTPUT_ROOT, output_file_name)
+    output_file_path = os.path.join(OUTPUT_ROOT_PER_COUNTRY, output_file_name)
 
     if len(gpx.waypoints) > 0:
         with open(output_file_path, "w", encoding="utf-8") as f:
@@ -357,6 +368,61 @@ for country in country_indexes:
         print(f"Generated {output_file_name}")
     else:
         print(f"Not generating {output_file_name} due to {len(gpx.waypoints)} museums in {country['country']['name']}")
+
+# Regenerate GPX files grouped by region
+if args.group:
+    groups = {}
+
+    # Load country groups from YAML config file
+    # https://stackoverflow.com/a/1774043/5337349
+    with open(os.path.join(PROJECT_ROOT, CONFIG_GROUP_FILENAME)) as stream:
+        try:
+            groups = yaml.safe_load(stream)
+            rich.print(f"Loaded {CONFIG_GROUP_FILENAME}: {groups}")
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    # Load all generated per-country GPX files we need for groups defined in YAML config file
+    required_countries = list(set(chain.from_iterable(groups.values())))
+
+    def load_country_gpx_data(country_name):
+        country_file_name = f"{country_name}.gpx"
+        file_path = os.path.join(OUTPUT_ROOT_PER_COUNTRY, country_file_name)
+
+        if not os.path.isfile(file_path):
+            print(f"Warning: missing {country_file_name}")
+            return None
+
+        with open(file_path, 'r', encoding="utf-8") as gpx_file:
+            return gpxpy.parse(gpx_file)
+
+    per_country_data = { k:v for (k,v) in zip(required_countries, map(load_country_gpx_data, required_countries)) }
+
+    if not os.path.isdir(OUTPUT_ROOT_GROUPED):
+        os.mkdir(OUTPUT_ROOT_GROUPED)
+
+    # Generate GPX files grouped by region
+    for group_name, group_countries in groups.items():
+        group_output_file_name = f"{group_name}.gpx"
+        group_output_file_path = os.path.join(OUTPUT_ROOT_GROUPED, group_output_file_name)
+
+        gpx = gpxpy.gpx.GPX()
+        gpx.creator = GPX_CREATOR
+        gpx.name = f"Automuseums.info: {group_name}"
+        gpx.description = f"Generated using {gpx.creator}"
+        gpx.link = WEBSITE_ROOT_URL
+        gpx.time = datetime.datetime.now(datetime.timezone.utc)
+
+        for country_name in group_countries:
+            if isinstance(per_country_data[country_name], gpxpy.gpx.GPX):
+                gpx.waypoints.extend(per_country_data[country_name].waypoints)
+
+        if len(gpx.waypoints) > 0:
+            with open(group_output_file_path, "w", encoding="utf-8") as f:
+                f.write(gpx.to_xml())
+            print(f"Generated {group_output_file_name}")
+        else:
+            print(f"Not generating {group_output_file_name} due to {len(gpx.waypoints)} museums in {group_name}")
 
 if args.lowprofile:
     capture_checkin(
