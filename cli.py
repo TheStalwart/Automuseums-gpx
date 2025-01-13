@@ -382,6 +382,9 @@ if args.group:
         except yaml.YAMLError as exc:
             print(exc)
 
+    # Extend groups definition with "All Countries"
+    groups['All countries'] = list(map(lambda c: c['name'], countries))
+
     # Load all generated per-country GPX files we need for groups defined in YAML config file
     required_countries = list(set(chain.from_iterable(groups.values())))
 
