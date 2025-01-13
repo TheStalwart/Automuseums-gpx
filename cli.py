@@ -379,8 +379,8 @@ if args.group:
     with open(os.path.join(PROJECT_ROOT, CONFIG_GROUP_FILENAME)) as stream:
         try:
             groups = yaml.safe_load(stream)
-            print(f"Loaded {CONFIG_GROUP_FILENAME}:")
-            pprint(groups)
+            # print(f"Loaded {CONFIG_GROUP_FILENAME}:")
+            # pprint(groups)
         except yaml.YAMLError as exc:
             print(exc)
 
