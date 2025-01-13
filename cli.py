@@ -12,7 +12,8 @@ import sys
 import time
 import requests
 from bs4 import BeautifulSoup
-import rich
+from rich import print
+from rich.pretty import pprint
 import gpxpy
 import gpxpy.gpx
 import sentry_sdk
@@ -108,7 +109,7 @@ def download_country_index(selected_country):
         return { 'country': selected_country, 'museums': index }
 
     def download_index():
-        print(f"Downloading {selected_country['name']}...")
+        print(f"Downloading [yellow]{selected_country['name']}[/yellow]...")
         index_pages = []
 
         # Delete old cache
@@ -145,7 +146,7 @@ def download_country_index(selected_country):
         current_timestamp = time.time()
         cache_file_age_seconds = current_timestamp - selected_country['cache_timestamp']
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
-        print(f"{selected_country['name']} index cache is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old")
+        print(f"[yellow]{selected_country['name']}[/yellow] index cache is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old")
 
         if cache_file_age_hours < args.cache_ttl_museumlist:
             print("Loading cached index...")
@@ -230,7 +231,7 @@ def load_museum_page(country, museum_properties):
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
 
         if cache_file_age_hours < args.cache_ttl_museumpage:
-            print(f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old cached museum page for {museum_properties['name']}...")
+            print(f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old cached museum page for [yellow]{museum_properties['name']}[/yellow]...")
             with open(cache_file_path, 'r', encoding="utf-8") as f:
                 html_contents = f.read()
                 return BeautifulSoup(html_contents, 'html.parser'), cache_file_path
@@ -319,16 +320,16 @@ else:
             country_indexes.append(download_country_index(selected_country))
 
 for country in country_indexes:
-    print(f"Loading museums of {country['country']['name']}...")
+    print(f"Loading museums of [yellow]{country['country']['name']}[/yellow]...")
     for museum_properties in country['museums']:
         page, cache_file_path = load_museum_page(country['country'], museum_properties)
         museum_properties['cache_file_path'] = cache_file_path
         museum_properties.update(parse_museum_page(page))
     if not args.verbose:
-        print(f"Parsed {country['country']['name']}: {len(country['museums'])} museums")
+        print(f"Parsed [yellow]{country['country']['name']}[/yellow]: {len(country['museums'])} museums")
 
 if args.verbose:
-    rich.print(country_indexes)
+    print(country_indexes)
 
 # Generate per-country GPX files
 # https://github.com/tkrajina/gpxpy/blob/dev/examples/waypoints_example.py
@@ -365,9 +366,9 @@ for country in country_indexes:
     if len(gpx.waypoints) > 0:
         with open(output_file_path, "w", encoding="utf-8") as f:
             f.write(gpx.to_xml())
-        print(f"Generated {output_file_name}")
+        print(f"Generated [cyan]{output_file_name}[/cyan]")
     else:
-        print(f"Not generating {output_file_name} due to {len(gpx.waypoints)} museums in {country['country']['name']}")
+        print(f"Not generating [red]{output_file_name}[/red] due to {len(gpx.waypoints)} museums in [yellow]{country['country']['name']}[/yellow]")
 
 # Regenerate GPX files grouped by region
 if args.group:
@@ -378,7 +379,8 @@ if args.group:
     with open(os.path.join(PROJECT_ROOT, CONFIG_GROUP_FILENAME)) as stream:
         try:
             groups = yaml.safe_load(stream)
-            rich.print(f"Loaded {CONFIG_GROUP_FILENAME}: {groups}")
+            print(f"Loaded {CONFIG_GROUP_FILENAME}:")
+            pprint(groups)
         except yaml.YAMLError as exc:
             print(exc)
 
@@ -393,7 +395,7 @@ if args.group:
         file_path = os.path.join(OUTPUT_ROOT_PER_COUNTRY, country_file_name)
 
         if not os.path.isfile(file_path):
-            print(f"Warning: missing {country_file_name}")
+            print(f"Warning: missing [red]{country_file_name}[/red]")
             return None
 
         with open(file_path, 'r', encoding="utf-8") as gpx_file:
@@ -423,9 +425,9 @@ if args.group:
         if len(gpx.waypoints) > 0:
             with open(group_output_file_path, "w", encoding="utf-8") as f:
                 f.write(gpx.to_xml())
-            print(f"Generated {group_output_file_name}")
+            print(f"Generated [magenta]{group_output_file_name}[/magenta]")
         else:
-            print(f"Not generating {group_output_file_name} due to {len(gpx.waypoints)} museums in {group_name}")
+            print(f"Not generating [red]{group_output_file_name}[/red] due to {len(gpx.waypoints)} museums in {group_name}")
 
 if args.lowprofile:
     capture_checkin(
