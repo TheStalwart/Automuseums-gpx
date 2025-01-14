@@ -51,6 +51,9 @@ def load_countries():
         with open(cache_file_path, "w", encoding="utf-8") as f:
             f.write(homepage_contents)
 
+        if args.request_delay > 0:
+            time.sleep(args.request_delay)
+
         return homepage_contents
 
     html_contents = ''
@@ -128,6 +131,9 @@ def download_country_index(selected_country):
 
             with open(cached_page_path, "w", encoding="utf-8") as f:
                 f.write(page_contents)
+
+            if args.request_delay > 0:
+                time.sleep(args.request_delay)
 
             soup = BeautifulSoup(page_contents, 'html.parser')
 
@@ -220,6 +226,9 @@ def load_museum_page(country, museum_properties):
         with open(cache_file_path, "w", encoding="utf-8") as f:
             f.write(page_contents)
 
+        if args.request_delay > 0:
+            time.sleep(args.request_delay)
+
         return BeautifulSoup(page_contents, 'html.parser')
 
     if not os.path.isfile(cache_file_path):
@@ -284,6 +293,7 @@ arg_parser.add_argument('--country', help='Limit scrape to one country')
 arg_parser.add_argument('--cache-ttl-countrylist', type=int, default=55, help='Override country list cache time-to-live in minutes (default: %(default)s)')
 arg_parser.add_argument('--cache-ttl-museumlist', type=int, default=24, help='Override museum list cache time-to-live in hours (default: %(default)s)')
 arg_parser.add_argument('--cache-ttl-museumpage', type=int, default=48, help='Override museum page cache time-to-live in hours (default: %(default)s)')
+arg_parser.add_argument('--request-delay', type=int, default=15, help='Delay after every HTTPS request in seconds (default: %(default)s)')
 arg_parser.add_argument('--lowprofile', action='store_true', help='Update 1 country with oldest cache')
 arg_parser.add_argument('--group', action='store_true', help='Generate files grouped by region')
 arg_parser.add_argument('--verbose', action='store_true', help='Print data used to generate GPX files')

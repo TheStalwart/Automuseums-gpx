@@ -156,6 +156,8 @@
           "999",
           "--cache-ttl-museumpage",
           "999",
+          "--request-delay",
+          "0",
           "--group"
         ]
       },
