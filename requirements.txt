@@ -1,5 +1,6 @@
 beautifulsoup4==4.12.2
 gpxpy==1.6.2
+humanize==4.11.0
 PyYAML==6.0.2
 requests==2.31.0
 rich==13.7.1

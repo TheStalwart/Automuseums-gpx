@@ -10,6 +10,7 @@ import pathlib
 import random
 import sys
 import time
+import humanize
 import requests
 from bs4 import BeautifulSoup
 from rich import print
@@ -282,6 +283,8 @@ try:
 except:
     pass
 
+start_datetime = datetime.datetime.now()
+
 # Ensure cache folders exist
 if not os.path.isdir(CACHE_ROOT):
     os.mkdir(CACHE_ROOT)
@@ -443,6 +446,8 @@ if args.group:
             print(f"Generated [magenta]{group_output_file_name}[/magenta]")
         else:
             print(f"Not generating [red]{group_output_file_name}[/red] due to {len(gpx.waypoints)} museums in {group_name}")
+
+print(f"Completed in {humanize.naturaldelta(datetime.datetime.now() - start_datetime)}")
 
 if args.lowprofile:
     capture_checkin(
