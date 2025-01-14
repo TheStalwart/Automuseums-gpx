@@ -193,7 +193,7 @@ def parse_country_index(pages):
 
     return unique_museums
 
-def load_museum_page(country, museum_properties):
+def load_museum_page(country, museums, museum_properties):
     cache_museum_root_path = os.path.join(country['cache_path'], 'museums')
     if not os.path.isdir(cache_museum_root_path):
         os.mkdir(cache_museum_root_path)
@@ -220,7 +220,7 @@ def load_museum_page(country, museum_properties):
 
     def download_page():
         r = requests.get(f"{WEBSITE_ROOT_URL}{museum_properties['relative_url']}")
-        print(f"Downloaded {r.url}")
+        print(f"Downloaded {museums.index(museum_properties) + 1}/{len(museums)} {r.url}")
         page_contents = r.text
 
         with open(cache_file_path, "w", encoding="utf-8") as f:
@@ -334,9 +334,9 @@ else:
             country_indexes.append(download_country_index(selected_country))
 
 for country in country_indexes:
-    print(f"Loading museums of [yellow]{country['country']['name']}[/yellow]...")
+    print(f"Loading {len(country['museums'])} museums of [yellow]{country['country']['name']}[/yellow]...")
     for museum_properties in country['museums']:
-        page, cache_file_path = load_museum_page(country['country'], museum_properties)
+        page, cache_file_path = load_museum_page(country['country'], country['museums'], museum_properties)
         museum_properties['cache_file_path'] = cache_file_path
         museum_properties.update(parse_museum_page(page))
     if not args.verbose:
