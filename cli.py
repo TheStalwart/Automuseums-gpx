@@ -37,6 +37,7 @@ CACHE_COUNTRY_ROOT = os.path.join(CACHE_ROOT, 'countries')
 OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
 OUTPUT_ROOT_PER_COUNTRY = os.path.join(OUTPUT_ROOT, "per-country")
 OUTPUT_ROOT_GROUPED = os.path.join(OUTPUT_ROOT, "grouped-by-region")
+OUTPUT_FILENAME_PREFIX = "Automuseums.info - "
 
 GPX_CREATOR = 'https://github.com/TheStalwart/Automuseums-gpx'
 
@@ -374,7 +375,7 @@ for country in country_indexes:
     if not os.path.isdir(OUTPUT_ROOT_PER_COUNTRY):
         os.mkdir(OUTPUT_ROOT_PER_COUNTRY)
 
-    output_file_name = f"{country['country']['name']}.gpx"
+    output_file_name = f"{OUTPUT_FILENAME_PREFIX}{country['country']['name']}.gpx"
     output_file_path = os.path.join(OUTPUT_ROOT_PER_COUNTRY, output_file_name)
 
     if len(gpx.waypoints) > 0:
@@ -405,7 +406,7 @@ if args.group:
     required_countries = list(set(chain.from_iterable(groups.values())))
 
     def load_country_gpx_data(country_name):
-        country_file_name = f"{country_name}.gpx"
+        country_file_name = f"{OUTPUT_FILENAME_PREFIX}{country_name}.gpx"
         file_path = os.path.join(OUTPUT_ROOT_PER_COUNTRY, country_file_name)
 
         if not os.path.isfile(file_path):
@@ -422,7 +423,7 @@ if args.group:
 
     # Generate GPX files grouped by region
     for group_name, group_countries in groups.items():
-        group_output_file_name = f"{group_name}.gpx"
+        group_output_file_name = f"{OUTPUT_FILENAME_PREFIX}{group_name}.gpx"
         group_output_file_path = os.path.join(OUTPUT_ROOT_GROUPED, group_output_file_name)
 
         gpx = gpxpy.gpx.GPX()
