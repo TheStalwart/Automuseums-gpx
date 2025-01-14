@@ -307,6 +307,10 @@ if args.lowprofile:
         status=MonitorStatus.IN_PROGRESS,
     )
 
+    # Calls to stop_profiler are optional - if you don't stop the profiler, it will keep profiling
+    # your application until the process exits or stop_profiler is called.
+    sentry_sdk.profiler.start_profiler()
+
 # Refresh country list
 countries = load_countries()
 country_indexes = []
