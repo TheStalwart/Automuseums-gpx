@@ -262,3 +262,16 @@ North America: # as listed on https://www.countries-ofthe-world.com/countries-of
 - Trinidad
 - United States
 
+South America: # as listed on https://www.countries-ofthe-world.com/countries-of-south-america.html
+- Argentina
+# - Bolivia # Not listed on Automuseums.info
+- Brazil
+- Chile
+# - Colombia # Not listed on Automuseums.info
+# - Ecuador # Not listed on Automuseums.info
+# - Guyana # Not listed on Automuseums.info
+- Paraguay
+- Peru
+# - Suriname # Not listed on Automuseums.info
+- Uruguay
+# - Venezuela # Not listed on Automuseums.info
