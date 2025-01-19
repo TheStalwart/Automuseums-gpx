@@ -249,14 +249,22 @@ def load_museum_page(country, museums, museum_properties):
         else:
             return download_page(), cache_file_path
 
-def parse_museum_page(page):
+def parse_museum_page(page, museum_properties):
     museum_description = ''
-    body_div = page.find(class_='node-content').find(class_='field--name-body')
+
+    content_div = page.find(class_='node-content')
+    body_div = content_div.find(class_='field--name-body')
     if body_div: # https://automuseums.info/estonia/estonian-museum-old-technology - no description <div>
         # for some museums, description is wrapped in extra <p> tag
         # https://automuseums.info/barbados/mallalieu-motor-collection - has two children <p> tags
         # https://automuseums.info/jordan/royal-automobile-museum - field--name-body value is enclosed in double-quotes
         museum_description = "\n".join(map(str, list(body_div.children)))
+
+    abbreviation_div = content_div.find(class_='field--name-abbreviation')
+    if abbreviation_div and abbreviation_div.contents[0] and (abbreviation_div.contents[0] != museum_properties['name']):
+        # if field--name-abbreviation value is different from main title
+        # it's usually the original museum name in country's official language
+        museum_description = f"{abbreviation_div.contents[0]}\n\n{museum_description}"
 
     drupal_node_id = page.find('article')['data-history-node-id']
 
@@ -266,7 +274,11 @@ def parse_museum_page(page):
     leaflet_points = list(filter(lambda f: f['type'] == 'point', leaflet_features))
     coordinates = list(map(lambda p: { 'lat': p['lat'], 'lon': p['lon'] }, leaflet_points))
 
-    return { 'description': museum_description, 'drupal_node_id': drupal_node_id, 'coordinates': coordinates }
+    return {
+        'description': museum_description,
+        'drupal_node_id': drupal_node_id,
+        'coordinates': coordinates
+    }
 
 # Init Sentry before doing anything that might raise exception
 try:
@@ -338,7 +350,7 @@ for country in country_indexes:
     for museum_properties in country['museums']:
         page, cache_file_path = load_museum_page(country['country'], country['museums'], museum_properties)
         museum_properties['cache_file_path'] = cache_file_path
-        museum_properties.update(parse_museum_page(page))
+        museum_properties.update(parse_museum_page(page, museum_properties))
     if not args.verbose:
         print(f"Parsed [yellow]{country['country']['name']}[/yellow]: {len(country['museums'])} museums")
 
