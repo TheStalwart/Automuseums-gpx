@@ -309,6 +309,11 @@ arg_parser.add_argument('--request-delay', type=int, default=15, help='Delay aft
 arg_parser.add_argument('--lowprofile', action='store_true', help='Update 1 country with oldest cache')
 arg_parser.add_argument('--group', action='store_true', help='Generate files grouped by region')
 arg_parser.add_argument('--verbose', action='store_true', help='Print data used to generate GPX files')
+
+# During development i often diff GPX output
+# and <time> tag makes output noisy
+arg_parser.add_argument('--omit-time', action='store_true', help='Omit <time> tag from generated GPX files')
+
 args = arg_parser.parse_args()
 
 sentry_lowprofile_slug = 'lowprofile'
@@ -365,7 +370,9 @@ for country in country_indexes:
     gpx.name = f"Automuseums.info: {country['country']['name']}"
     gpx.description = f"Generated using {gpx.creator}"
     gpx.link = country['country']['absolute_url']
-    gpx.time = datetime.datetime.now(datetime.timezone.utc)
+
+    if not args.omit_time:
+        gpx.time = datetime.datetime.now(datetime.timezone.utc)
 
     def create_gpx_waypoint(museum):
         gpx_wps = gpxpy.gpx.GPXWaypoint()
@@ -442,7 +449,9 @@ if args.group:
         gpx.name = f"Automuseums.info: {group_name}"
         gpx.description = f"Generated using {gpx.creator}"
         gpx.link = WEBSITE_ROOT_URL
-        gpx.time = datetime.datetime.now(datetime.timezone.utc)
+
+        if not args.omit_time:
+            gpx.time = datetime.datetime.now(datetime.timezone.utc)
 
         for country_name in group_countries:
             if isinstance(per_country_data[country_name], gpxpy.gpx.GPX):
