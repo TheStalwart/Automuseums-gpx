@@ -162,6 +162,25 @@
           "--group"
         ]
       },
+      {
+        "name": "Regenerate all GPX from cache",
+        // generates GPX files grouped by region
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--verbose",
+          "--cache-ttl-countrylist",
+          "999",
+          "--cache-ttl-museumlist",
+          "999",
+          "--cache-ttl-museumpage",
+          "999",
+          "--omit-time",
+          "--group"
+        ]
+      },
     ]
   }
 }
