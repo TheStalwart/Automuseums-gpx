@@ -38,6 +38,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose"
         ]
       },
@@ -48,6 +49,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--lowprofile"
         ]
@@ -59,6 +61,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--country",
           "United States"
@@ -71,6 +74,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--country",
           "Czechia"
@@ -83,6 +87,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--country",
           "Estonia"
@@ -96,6 +101,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--country",
           "Jordan"
@@ -109,6 +115,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--country",
           "Ghana"
@@ -122,6 +129,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--country",
           "Bosnia"
@@ -135,6 +143,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--country",
           "New Zealand"
@@ -148,6 +157,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--lowprofile",
           "--cache-ttl-countrylist",
@@ -158,7 +168,6 @@
           "999",
           "--request-delay",
           "0",
-          "--omit-time",
           "--group"
         ]
       },
@@ -170,6 +179,7 @@
         "program": "cli.py",
         "console": "integratedTerminal",
         "args": [
+          "--omit-time",
           "--verbose",
           "--cache-ttl-countrylist",
           "999",
@@ -177,7 +187,6 @@
           "999",
           "--cache-ttl-museumpage",
           "999",
-          "--omit-time",
           "--group"
         ]
       },
