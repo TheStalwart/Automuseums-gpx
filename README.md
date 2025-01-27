@@ -21,6 +21,17 @@ Regenerate output files with current cache:
 Run in lowprofile mode and regenerate grouped GPX:
 `.venv/bin/python3 cli.py --lowprofile --group`
 
+## Lowprofile mode
+
+`--lowprofile` mode is designed to be executed periodically (e.g. via cron)
+and keep output GPX files up to date with upstream website data.
+
+It will pick a single country with oldest (or absent) output
+and refresh data on its museums, including `grouped-by-region` output files
+if `--group` option is enabled.
+
+With default `--request-delay` execution can take more than 2 hours for countries like United States.
+
 ## Development environment
 
 ### venv-based
