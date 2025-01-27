@@ -329,7 +329,7 @@ if os.path.isfile(lock_file_path):
         print("[red]Deleting stale lock file[/red]")
         os.remove(lock_file_path)
     else:
-        if sys.gettrace():
+        if sys.gettrace(): # https://stackoverflow.com/a/72977762/5337349
             print("[red]Lock file ignored due to debugging[/red]")
         else:
             print("[red]Another instance of the script is running, exiting[/red]")
