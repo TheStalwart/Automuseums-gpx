@@ -316,6 +316,27 @@ arg_parser.add_argument('--omit-time', action='store_true', help='Omit <time> ta
 
 args = arg_parser.parse_args()
 
+# Make sure we don't run more than one instance
+# on the same set of cache/output folders
+lock_file_path = os.path.join(PROJECT_ROOT, "cli.lock")
+if os.path.isfile(lock_file_path):
+    # if script is launched in lowprofile mode,
+    # but lockfile is older than 24h -
+    # assume previous execution has failed,
+    # e.g. due to host machine power failure,
+    # recreate the lock and carry on
+    if args.lowprofile and os.path.getmtime(lock_file_path) < time.time() - 60 * 60 * 24:
+        print("[red]Deleting stale lock file[/red]")
+        os.remove(lock_file_path)
+    else:
+        if sys.gettrace():
+            print("[red]Lock file ignored due to debugging[/red]")
+        else:
+            print("[red]Another instance of the script is running, exiting[/red]")
+            sys.exit(1)
+open(lock_file_path, "w").close()
+
+# Check-in with Sentry cron monitoring
 sentry_lowprofile_slug = 'lowprofile'
 sentry_check_in_id = ''
 if args.lowprofile:
@@ -335,6 +356,10 @@ country_indexes = []
 if args.country:
     country_search_results = list(filter(lambda c: c['name'] == args.country, countries))
     if len(country_search_results) < 1:
+        # technically, a clean exit
+        # even though no useful work has been done
+        os.remove(lock_file_path)
+
         readable_country_list = ', '.join(map(lambda country: country['name'], countries))
         sys.exit(f"Country \"{args.country}\" not found.\n\nTry any of these: {readable_country_list}")
 
@@ -465,6 +490,9 @@ if args.group:
             print(f"Not generating [red]{group_output_file_name}[/red] due to {len(gpx.waypoints)} museums in {group_name}")
 
 print(f"Completed in {humanize.naturaldelta(datetime.datetime.now() - start_datetime)}")
+
+# Clean exit
+os.remove(lock_file_path)
 
 if args.lowprofile:
     capture_checkin(

@@ -10,6 +10,7 @@ cache/
 output/*.gpx
 output/*/*.gpx
 sentry.dsn
+cli.lock
 
 # macOS litter
 .DS_Store
