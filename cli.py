@@ -489,7 +489,8 @@ if args.group:
         else:
             print(f"Not generating [red]{group_output_file_name}[/red] due to {len(gpx.waypoints)} museums in {group_name}")
 
-print(f"Completed in {humanize.naturaldelta(datetime.datetime.now() - start_datetime)}")
+humanized_execution_duration = humanize.precisedelta(datetime.datetime.now() - start_datetime, minimum_unit="seconds", format="%.0f")
+print(f"Completed in {humanized_execution_duration}")
 
 # Clean exit
 os.remove(lock_file_path)
