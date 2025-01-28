@@ -81,6 +81,20 @@
         ]
       },
       {
+        "name": "Python Debugger: Denmark only",
+        // some of the descriptions have dirty HTML
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--omit-time",
+          "--verbose",
+          "--country",
+          "Denmark"
+        ]
+      },
+      {
         "name": "Python Debugger: Estonia only",
         "type": "debugpy",
         "request": "launch",
