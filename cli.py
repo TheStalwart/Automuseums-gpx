@@ -254,11 +254,14 @@ def parse_museum_page(page, museum_properties):
 
     content_div = page.find(class_='node-content')
     body_div = content_div.find(class_='field--name-body')
-    if body_div: # https://automuseums.info/estonia/estonian-museum-old-technology - no description <div>
+    if body_div:
         # for some museums, description is wrapped in extra <p> tag
-        # https://automuseums.info/barbados/mallalieu-motor-collection - has two children <p> tags
+        # https://automuseums.info/denmark/egeskov-castle - has multiple <p> tags
         # https://automuseums.info/jordan/royal-automobile-museum - field--name-body value is enclosed in double-quotes
-        museum_description = "\n".join(map(str, list(body_div.children)))
+
+        # Most popular apps with GPX import feature do not support HTML tags,
+        # so do a simple conversion to plain text
+        museum_description = "".join(list(body_div.text)).replace("\n", "\n\n").strip().strip('"')
 
     original_name = None
     abbreviation_div = content_div.find(class_='field--name-abbreviation')
