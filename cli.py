@@ -273,7 +273,12 @@ def parse_museum_page(page, museum_properties):
         # e.g. https://automuseums.info/lithuania/lithuanian-road-museum
         # Since we strip description to plain text,
         # capture those extra links to avoid losing them.
-        links_in_description = body_div.find_all('a')
+        # Also, avoid random "<a id="search" name="search"></a>"
+        # in https://automuseums.info/united-states/walker-transportation-collection
+        # by only capturing links with text
+        # https://pytutorial.com/beautifulsoup-find-by-text/
+        # https://beautiful-soup-4.readthedocs.io/en/latest/#id12
+        links_in_description = body_div.find_all('a', string=True)
         if links_in_description:
             links.extend(list(map(lambda a: { 'url': a['href'], 'title': a.text }, links_in_description)))
 
