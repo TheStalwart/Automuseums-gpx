@@ -253,6 +253,12 @@ def parse_museum_page(page, museum_properties):
     museum_description = ''
 
     content_div = page.find(class_='node-content')
+
+    links = []
+    links_div = content_div.find(class_='field--name-link')
+    if links_div:
+        links = list(map(lambda a: { 'url': a['href'], 'title': a.text }, links_div.find_all("a")))
+
     body_div = content_div.find(class_='field--name-body')
     if body_div:
         # for some museums, description is wrapped in extra <p> tag
@@ -263,17 +269,20 @@ def parse_museum_page(page, museum_properties):
         # so do a simple conversion to plain text
         museum_description = "".join(list(body_div.text)).replace("\n", "\n\n").strip().strip('"')
 
+        # Some pages contain extra links in description,
+        # e.g. https://automuseums.info/lithuania/lithuanian-road-museum
+        # Since we strip description to plain text,
+        # capture those extra links to avoid losing them.
+        links_in_description = body_div.find_all('a')
+        if links_in_description:
+            links.extend(list(map(lambda a: { 'url': a['href'], 'title': a.text }, links_in_description)))
+
     original_name = None
     abbreviation_div = content_div.find(class_='field--name-abbreviation')
     if abbreviation_div and abbreviation_div.contents[0] and (abbreviation_div.contents[0] != museum_properties['name']):
         # if field--name-abbreviation value is different from main name
         # it's usually the original museum name in country's official language
         original_name = abbreviation_div.contents[0]
-
-    links = []
-    links_div = content_div.find(class_='field--name-link')
-    if links_div:
-        links = list(map(lambda a: { 'url': a['href'], 'title': a.text }, links_div.find_all("a")))
 
     drupal_node_id = page.find('article')['data-history-node-id']
 
