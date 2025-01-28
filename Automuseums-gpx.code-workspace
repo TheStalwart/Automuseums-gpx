@@ -122,6 +122,20 @@
         ]
       },
       {
+        "name": "Python Debugger: Lithuania only",
+        // for debugging link parsing
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--omit-time",
+          "--verbose",
+          "--country",
+          "Lithuania"
+        ]
+      },
+      {
         "name": "Python Debugger: Ghana only",
         // 0 museums, but is mentioned on the website's country list
         "type": "debugpy",

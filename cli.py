@@ -270,6 +270,11 @@ def parse_museum_page(page, museum_properties):
         # it's usually the original museum name in country's official language
         original_name = abbreviation_div.contents[0]
 
+    links = []
+    links_div = content_div.find(class_='field--name-link')
+    if links_div:
+        links = list(map(lambda a: { 'url': a['href'], 'title': a.text }, links_div.find_all("a")))
+
     drupal_node_id = page.find('article')['data-history-node-id']
 
     data_json = page.find(attrs={"data-drupal-selector": "drupal-settings-json"}).contents[0]
@@ -281,6 +286,7 @@ def parse_museum_page(page, museum_properties):
     return {
         'description': museum_description,
         'original_name': original_name,
+        'links': links,
         'drupal_node_id': drupal_node_id,
         'coordinates': coordinates
     }
@@ -410,16 +416,27 @@ for country in country_indexes:
         gpx_wps.longitude = museum['coordinates'][0]['lon'] # WARNING: does not cover multi-location museums atm
         gpx_wps.symbol = "Museum"
         gpx_wps.name = museum['name']
-
-        # Google My Maps ignores <link> tags in Waypoints when importing,
-        # so add an extra copy of the link at the end of <desc> tag
-        gpx_wps.description = f"{museum['description']}\n\n{museum['absolute_url']}"
+        gpx_wps.description = museum['description']
 
         # Prepend description with museum's original name in native language, if available
         if museum['original_name']:
             gpx_wps.description = f"{museum['original_name']}\n\n{gpx_wps.description}"
 
+        # GPX 1.1 Schema supports multiple links per waypoint,
+        # https://www.topografix.com/gpx.asp
+        # https://www.topografix.com/GPX/1/1/gpx.xsd
+        # but gpxpy library assumes there can be only one link tag
+        # https://github.com/tkrajina/gpxpy/issues/138
         gpx_wps.link = museum['absolute_url']
+
+        # Besides this gpxpy issue,
+        # Google My Maps ignores <link> tags in Waypoints when importing,
+        # so add all the links at the end of <desc> tag
+        links = museum['links']
+        links.append({ 'url': museum['absolute_url'], 'title': 'Automuseums.info' })
+        links_section_plaintext = "\n".join(list(map(lambda l: f"{l['title']}: {l['url']}", links)))
+        gpx_wps.description = f"{gpx_wps.description}\n\n{links_section_plaintext}"
+
         return gpx_wps
 
     gpx.waypoints.extend(list(map(create_gpx_waypoint, country['museums'])))
