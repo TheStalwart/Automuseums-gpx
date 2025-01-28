@@ -32,6 +32,9 @@ if `--group` option is enabled.
 
 With default `--request-delay` execution can take more than 2 hours for countries like United States.
 
+A convenient side-effect of only refreshing one country is low RAM requirement.
+Unlike all-country runs, lowprofile mode works fine on <=1GB RAM computers.
+
 ## Sentry.io SDK integration
 
 To enable [Sentry.io SDK](https://docs.sentry.io/platforms/python/),
