@@ -260,11 +260,12 @@ def parse_museum_page(page, museum_properties):
         # https://automuseums.info/jordan/royal-automobile-museum - field--name-body value is enclosed in double-quotes
         museum_description = "\n".join(map(str, list(body_div.children)))
 
+    original_name = None
     abbreviation_div = content_div.find(class_='field--name-abbreviation')
     if abbreviation_div and abbreviation_div.contents[0] and (abbreviation_div.contents[0] != museum_properties['name']):
-        # if field--name-abbreviation value is different from main title
+        # if field--name-abbreviation value is different from main name
         # it's usually the original museum name in country's official language
-        museum_description = f"{abbreviation_div.contents[0]}\n\n{museum_description}"
+        original_name = abbreviation_div.contents[0]
 
     drupal_node_id = page.find('article')['data-history-node-id']
 
@@ -276,6 +277,7 @@ def parse_museum_page(page, museum_properties):
 
     return {
         'description': museum_description,
+        'original_name': original_name,
         'drupal_node_id': drupal_node_id,
         'coordinates': coordinates
     }
@@ -409,6 +411,10 @@ for country in country_indexes:
         # Google My Maps ignores <link> tags in Waypoints when importing,
         # so add an extra copy of the link at the end of <desc> tag
         gpx_wps.description = f"{museum['description']}\n\n{museum['absolute_url']}"
+
+        # Prepend description with museum's original name in native language, if available
+        if museum['original_name']:
+            gpx_wps.description = f"{museum['original_name']}\n\n{gpx_wps.description}"
 
         gpx_wps.link = museum['absolute_url']
         return gpx_wps
