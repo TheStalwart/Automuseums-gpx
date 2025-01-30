@@ -289,6 +289,13 @@ def parse_museum_page(page, museum_properties):
         # it's usually the original museum name in country's official language
         original_name = abbreviation_div.contents[0]
 
+    info = None
+    info_div = content_div.find(class_='field--name-info')
+    if info_div and info_div.find(class_='field-item') and info_div.find(class_='field-item').contents[0]:
+        # this field usually contains extra properties
+        # e.g. opening times or "Open by appointment" string
+        info = "".join(list(info_div.find(class_='field-item').text)).strip().strip('"')
+
     drupal_node_id = page.find('article')['data-history-node-id']
 
     data_json = page.find(attrs={"data-drupal-selector": "drupal-settings-json"}).contents[0]
@@ -300,6 +307,7 @@ def parse_museum_page(page, museum_properties):
     return {
         'description': museum_description,
         'original_name': original_name,
+        'info': info,
         'links': links,
         'drupal_node_id': drupal_node_id,
         'coordinates': coordinates
@@ -435,6 +443,11 @@ for country in country_indexes:
         # Prepend description with museum's original name in native language, if available
         if museum['original_name']:
             gpx_wps.description = f"{museum['original_name']}\n\n{gpx_wps.description}"
+
+        # Append "Info" section
+        # usually containing opening times
+        if museum['info']:
+            gpx_wps.description = f"{gpx_wps.description}\n\n{museum['info']}"
 
         # GPX 1.1 Schema supports multiple links per waypoint,
         # https://www.topografix.com/gpx.asp
