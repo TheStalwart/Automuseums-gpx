@@ -289,6 +289,13 @@ def parse_museum_page(page, museum_properties):
         # it's usually the original museum name in country's official language
         original_name = abbreviation_div.contents[0]
 
+    display = None
+    display_div = content_div.find(class_='field--name-display')
+    if display_div and display_div.contents[0]:
+        # "Display" section on museum page usually lists
+        # what kinds of vehicles are exhibited
+        display = list(map(lambda item_tag: item_tag.text, display_div.find_all(class_='field-item')))
+
     info = None
     info_div = content_div.find(class_='field--name-info')
     if info_div and info_div.find(class_='field-item') and info_div.find(class_='field-item').contents[0]:
@@ -307,6 +314,7 @@ def parse_museum_page(page, museum_properties):
     return {
         'description': museum_description,
         'original_name': original_name,
+        'display': display,
         'info': info,
         'links': links,
         'drupal_node_id': drupal_node_id,
@@ -443,6 +451,13 @@ for country in country_indexes:
         # Prepend description with museum's original name in native language, if available
         if museum['original_name']:
             gpx_wps.description = f"{museum['original_name']}\n\n{gpx_wps.description}"
+
+        # Append "Display" section listing
+        # what kinds of vehicles are exhibited
+        if museum['display']:
+            display_item_list_formatted = "\n".join(list(map(lambda di: f"- {di}", museum['display'])))
+            display_section_formatted = f"Display:\n{display_item_list_formatted}"
+            gpx_wps.description = f"{gpx_wps.description}\n\n{display_section_formatted}"
 
         # Append "Info" section
         # usually containing opening times
