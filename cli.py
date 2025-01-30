@@ -303,6 +303,13 @@ def parse_museum_page(page, museum_properties):
         # e.g. opening times or "Open by appointment" string
         info = "".join(list(info_div.find(class_='field-item').text)).strip().strip('"')
 
+    email = None
+    email_div = content_div.find(class_='field--name-e-mail')
+    if email_div and email_div.contents[0]:
+        # "E-mail" section is a list of items,
+        # much like "Display" section
+        email = list(map(lambda item_tag: item_tag.text.strip(), email_div.find_all(class_='field-item')))
+
     phone = None
     phone_div = content_div.find(class_='field--name-phone')
     if phone_div and phone_div.contents[0]:
@@ -323,6 +330,7 @@ def parse_museum_page(page, museum_properties):
         'original_name': original_name,
         'display': display,
         'info': info,
+        'email': email,
         'phone': phone,
         'links': links,
         'drupal_node_id': drupal_node_id,
@@ -471,6 +479,17 @@ for country in country_indexes:
         # usually containing opening times
         if museum['info']:
             gpx_wps.description = f"{gpx_wps.description}\n\n{museum['info']}"
+
+        # Append "E-mail" section if available
+        if museum['email']:
+            if len(museum['email']) > 1:
+                email_item_list_formatted = "\n".join(list(map(lambda pi: f"{pi}", museum['email'])))
+                email_section_formatted = f"E-mail:\n{email_item_list_formatted}"
+                gpx_wps.description = f"{gpx_wps.description}\n\n{email_section_formatted}"
+            else:
+                # most museums have only one email listed,
+                # so collapse the entry into a single line
+                gpx_wps.description = f"{gpx_wps.description}\n\nE-mail: {museum['email'][0]}"
 
         # Append "Phone" section if available
         if museum['phone']:
