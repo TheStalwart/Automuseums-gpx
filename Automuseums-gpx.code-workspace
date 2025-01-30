@@ -122,6 +122,20 @@
         ]
       },
       {
+        "name": "Python Debugger: Germany only",
+        // Edge cases in phone number formatting
+        "type": "debugpy",
+        "request": "launch",
+        "program": "cli.py",
+        "console": "integratedTerminal",
+        "args": [
+          "--omit-time",
+          "--verbose",
+          "--country",
+          "Germany"
+        ]
+      },
+      {
         "name": "Python Debugger: Lithuania only",
         // for debugging link parsing
         "type": "debugpy",
