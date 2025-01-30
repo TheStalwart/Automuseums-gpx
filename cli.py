@@ -303,6 +303,13 @@ def parse_museum_page(page, museum_properties):
         # e.g. opening times or "Open by appointment" string
         info = "".join(list(info_div.find(class_='field-item').text)).strip().strip('"')
 
+    phone = None
+    phone_div = content_div.find(class_='field--name-phone')
+    if phone_div and phone_div.contents[0]:
+        # "Phone" section is a list of items,
+        # much like "Display" section
+        phone = list(map(lambda item_tag: item_tag.text.strip(), phone_div.find_all(class_='field-item')))
+
     drupal_node_id = page.find('article')['data-history-node-id']
 
     data_json = page.find(attrs={"data-drupal-selector": "drupal-settings-json"}).contents[0]
@@ -316,6 +323,7 @@ def parse_museum_page(page, museum_properties):
         'original_name': original_name,
         'display': display,
         'info': info,
+        'phone': phone,
         'links': links,
         'drupal_node_id': drupal_node_id,
         'coordinates': coordinates
@@ -463,6 +471,17 @@ for country in country_indexes:
         # usually containing opening times
         if museum['info']:
             gpx_wps.description = f"{gpx_wps.description}\n\n{museum['info']}"
+
+        # Append "Phone" section if available
+        if museum['phone']:
+            if len(museum['phone']) > 1:
+                phone_item_list_formatted = "\n".join(list(map(lambda pi: f"{pi}", museum['phone'])))
+                phone_section_formatted = f"Phone:\n{phone_item_list_formatted}"
+                gpx_wps.description = f"{gpx_wps.description}\n\n{phone_section_formatted}"
+            else:
+                # most museums have only one phone number listed,
+                # so collapse the entry into a single line
+                gpx_wps.description = f"{gpx_wps.description}\n\nPhone: {museum['phone'][0]}"
 
         # GPX 1.1 Schema supports multiple links per waypoint,
         # https://www.topografix.com/gpx.asp
