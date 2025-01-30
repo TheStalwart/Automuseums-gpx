@@ -303,6 +303,16 @@ def parse_museum_page(page, museum_properties):
         # e.g. opening times or "Open by appointment" string
         info = "".join(list(info_div.find(class_='field-item').text)).strip().strip('"')
 
+    address = None
+    address_div = content_div.find(class_='field--name-address')
+    if address_div and address_div.contents[0]:
+        # "Address" section is structured as a list of field-item tags
+        # each one containing a structure of spans
+        # for every part of the address.
+        # Do our best flattening those structures
+        # to return an array of multiline strings
+        address = list(map(lambda address_item_tag: address_item_tag.text.strip(), address_div.find_all(class_='field-item')))
+
     email = None
     email_div = content_div.find(class_='field--name-e-mail')
     if email_div and email_div.contents[0]:
@@ -330,6 +340,7 @@ def parse_museum_page(page, museum_properties):
         'original_name': original_name,
         'display': display,
         'info': info,
+        'address': address,
         'email': email,
         'phone': phone,
         'links': links,
@@ -479,6 +490,12 @@ for country in country_indexes:
         # usually containing opening times
         if museum['info']:
             gpx_wps.description = f"{gpx_wps.description}\n\n{museum['info']}"
+
+        # Append "Address" section
+        if museum['address']:
+            address_item_list_formatted = "\n\n".join(list(map(lambda ai: f"{ai}", museum['address'])))
+            address_section_formatted = f"Address:\n{address_item_list_formatted}"
+            gpx_wps.description = f"{gpx_wps.description}\n\n{address_section_formatted}"
 
         # Append "E-mail" section if available
         if museum['email']:
