@@ -56,6 +56,7 @@
       },
       {
         "name": "Python Debugger: US only",
+        // country with the most museums
         "type": "debugpy",
         "request": "launch",
         "program": "cli.py",
@@ -69,6 +70,7 @@
       },
       {
         "name": "Python Debugger: CZ only",
+        // contains a multi-location "Museum of Historical Motorcycles"
         "type": "debugpy",
         "request": "launch",
         "program": "cli.py",
