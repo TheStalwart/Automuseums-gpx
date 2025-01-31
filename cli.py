@@ -258,7 +258,7 @@ def parse_museum_page(page, museum_properties):
     links = []
     links_div = content_div.find(class_='field--name-link')
     if links_div:
-        links = list(map(lambda a: { 'url': a['href'], 'title': a.text }, links_div.find_all("a")))
+        links = list(map(lambda a: { 'url': a['href'], 'title': a.text.strip() }, links_div.find_all("a")))
 
     body_div = content_div.find(class_='field--name-body')
     if body_div:
@@ -281,7 +281,7 @@ def parse_museum_page(page, museum_properties):
         # https://beautiful-soup-4.readthedocs.io/en/latest/#id12
         links_in_description = body_div.find_all('a', string=True)
         if links_in_description:
-            links.extend(list(map(lambda a: { 'url': a['href'], 'title': a.text }, links_in_description)))
+            links.extend(list(map(lambda a: { 'url': a['href'], 'title': a.text.strip() }, links_in_description)))
 
     original_name = None
     abbreviation_div = content_div.find(class_='field--name-abbreviation')
