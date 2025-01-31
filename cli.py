@@ -187,11 +187,20 @@ def parse_country_index(pages):
 
         museums.extend(list(map(define_museum_properties, museum_blocks)))
 
-    # Deduplicate entries,
-    # because museum list pages return dupes of museums that have multiple locations.
-    # e.g. the following museum https://automuseums.info/czech-republic/museum-historical-motorcycles
-    # is listed 3x times on https://automuseums.info/museums/Czechia?page=4
-
+    # Museum list pages will display duplicates
+    # when a particular museum info page contains multiple locations.
+    # We deduplicate entries when building an index of museums,
+    # then produce multiple waypoints when building GPX files.
+    # Museum pages listing multiple locations, as of January 2025:
+    # - https://automuseums.info/czech-republic/museum-historical-motorcycles
+    # - https://automuseums.info/germany/fire-museum-schw%C3%A4bisch-hall
+    # - https://automuseums.info/australia/sir-henry-royce-foundation
+    # - https://automuseums.info/canada/western-development-museum
+    # - https://automuseums.info/russia/museum-vintage-motorcycles-and-antiques
+    # - https://automuseums.info/index.php/slovakia/skoda-classic-cars-museum
+    # - https://automuseums.info/switzerland/saurer-museum
+    # - https://automuseums.info/uruguay/eduardo-iglesias-automobile-museum
+    # - https://automuseums.info/iran/abadan-gasoline-house-museum (only one address)
     unique_museums = reduce(lambda l, x: l.append(x) or l if x not in l else l, museums, []) # https://stackoverflow.com/a/37163210
 
     return unique_museums
@@ -311,7 +320,12 @@ def parse_museum_page(page, museum_properties):
         # each one containing a structure of spans
         # for every part of the address.
         # Do our best flattening those structures
-        # to return an array of multiline strings
+        # to return an array of multiline strings.
+        # As of January 2025, almost all multi-coordinates museums
+        # are also a multi-address museums
+        # with address index matching coordinates index.
+        # When generating GPX waypoints from multi-location museum
+        # we only pick one address and one coordinate pair per waypoint.
         address = list(map(lambda address_item_tag: address_item_tag.text.strip(), address_div.find_all(class_='field-item')))
 
     email = None
@@ -475,12 +489,16 @@ for country in country_indexes:
     if not args.omit_time:
         gpx.time = datetime.datetime.now(datetime.timezone.utc)
 
-    def create_gpx_waypoint(museum):
+    def create_gpx_waypoint(museum, location_index):
         gpx_wps = gpxpy.gpx.GPXWaypoint()
-        gpx_wps.latitude = museum['coordinates'][0]['lat'] # WARNING: does not cover multi-location museums atm
-        gpx_wps.longitude = museum['coordinates'][0]['lon'] # WARNING: does not cover multi-location museums atm
+        gpx_wps.latitude = museum['coordinates'][location_index]['lat']
+        gpx_wps.longitude = museum['coordinates'][location_index]['lon']
         gpx_wps.symbol = "Museum"
+
         gpx_wps.name = museum['name']
+        if location_index > 0:
+            gpx_wps.name = f"{gpx_wps.name} ({location_index + 1})"
+
         gpx_wps.description = museum['description']
 
         # Prepend description with museum's original name in native language, if available
@@ -501,9 +519,19 @@ for country in country_indexes:
 
         # Append "Address" section
         if museum['address']:
-            address_item_list_formatted = "\n\n".join(list(map(lambda ai: f"{ai}", museum['address'])))
-            address_section_formatted = f"Address:\n{address_item_list_formatted}"
-            gpx_wps.description = f"{gpx_wps.description}\n\n{address_section_formatted}"
+            if len(museum['coordinates']) == len(museum['address']):
+                # if address count matches coordinates count,
+                # assume their indexes match,
+                # as that is the case for museums i tested as of January 2025.
+                address_section_formatted = f"Address:\n{museum['address'][location_index]}"
+                gpx_wps.description = f"{gpx_wps.description}\n\n{address_section_formatted}"
+            else:
+                # there is a museum in Iran
+                # that has two coordinates but only one address
+                # https://automuseums.info/iran/abadan-gasoline-house-museum
+                address_item_list_formatted = "\n\n".join(list(map(lambda ai: f"{ai}", museum['address'])))
+                address_section_formatted = f"Address:\n{address_item_list_formatted}"
+                gpx_wps.description = f"{gpx_wps.description}\n\n{address_section_formatted}"
 
         # Append "E-mail" section if available
         if museum['email']:
@@ -537,14 +565,16 @@ for country in country_indexes:
         # Besides this gpxpy issue,
         # Google My Maps ignores <link> tags in Waypoints when importing,
         # so add all the links at the end of <desc> tag
-        links = museum['links']
+        links = museum['links'].copy()
         links.append({ 'url': museum['absolute_url'], 'title': 'Automuseums.info' })
         links_section_plaintext = "\n".join(list(map(lambda l: f"{l['title']}: {l['url']}", links)))
         gpx_wps.description = f"{gpx_wps.description}\n\n{links_section_plaintext}"
 
         return gpx_wps
 
-    gpx.waypoints.extend(list(map(create_gpx_waypoint, country['museums'])))
+    for museum in country['museums']:
+        for location_index in range(len(museum['coordinates'])):
+            gpx.waypoints.append(create_gpx_waypoint(museum, location_index))
 
     if not os.path.isdir(OUTPUT_ROOT_PER_COUNTRY):
         os.mkdir(OUTPUT_ROOT_PER_COUNTRY)
