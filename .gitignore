@@ -9,6 +9,7 @@ __pycache__/
 cache/
 output/*.gpx
 output/*/*.gpx
+output/json/*.json
 output.old/*
 sentry.dsn
 cli.lock

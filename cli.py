@@ -38,6 +38,7 @@ CACHE_COUNTRY_ROOT = os.path.join(CACHE_ROOT, 'countries')
 OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
 OUTPUT_ROOT_PER_COUNTRY = os.path.join(OUTPUT_ROOT, "per-country")
 OUTPUT_ROOT_GROUPED = os.path.join(OUTPUT_ROOT, "grouped-by-region")
+OUTPUT_ROOT_JSON = os.path.join(OUTPUT_ROOT, "json")
 OUTPUT_FILENAME_PREFIX = "Automuseums.info - "
 
 GPX_CREATOR = 'https://github.com/TheStalwart/Automuseums-gpx'
@@ -451,6 +452,13 @@ for country in country_indexes:
         museum_properties.update(parse_museum_page(page, museum_properties))
     if not args.verbose:
         print(f"Parsed [yellow]{country['country']['name']}[/yellow]: {len(country['museums'])} museums")
+
+    if not os.path.isdir(OUTPUT_ROOT_JSON):
+        os.mkdir(OUTPUT_ROOT_JSON)
+    json_output_file_name = f"{country['country']['name']}.json"
+    json_output_file_path = os.path.join(OUTPUT_ROOT_JSON, json_output_file_name)
+    with open(json_output_file_path, "w", encoding='utf-8') as json_output_file:
+        json.dump(country, json_output_file, indent=2)
 
 if args.verbose:
     print(country_indexes)
