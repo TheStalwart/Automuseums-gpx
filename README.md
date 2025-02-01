@@ -42,6 +42,8 @@ create `sentry.dsn` file with Client Key (DSN) in the root of the project.
 
 ## Development environment
 
+- Python >=3.3
+
 ### venv-based
 
 To create venv:
