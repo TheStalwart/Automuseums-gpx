@@ -12,6 +12,7 @@ output/*/*.gpx
 output/json/*.json
 output.old/*
 sentry.dsn
+heartbeat.url
 cli.lock
 
 # macOS litter

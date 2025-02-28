@@ -374,6 +374,22 @@ try:
 except:
     pass
 
+# Attempt to load Better Stack heartbeat token
+betterstack_heartbeat_url = None
+try:
+    betterstack_heartbeat_url = pathlib.Path(os.path.join(PROJECT_ROOT, "heartbeat.url")).read_text().strip()
+except:
+    pass
+
+def report_failure_and_exit():
+    if betterstack_heartbeat_url:
+        print(f"Reporting heartbeat to {betterstack_heartbeat_url}/fail")
+        response = requests.get(f"{betterstack_heartbeat_url}/fail")
+        if not response.ok:
+            print(f"Failed!")
+        print(f"Response: [{response.status_code}]")
+    sys.exit(1)
+
 start_datetime = datetime.datetime.now()
 
 # Ensure cache folders exist
@@ -416,7 +432,7 @@ if os.path.isfile(lock_file_path):
             print("[red]Lock file ignored due to debugging[/red]")
         else:
             print("[red]Another instance of the script is running, exiting[/red]")
-            sys.exit(1)
+            report_failure_and_exit()
 open(lock_file_path, "w").close()
 
 # Check-in with Sentry cron monitoring
@@ -662,3 +678,11 @@ if args.lowprofile:
         check_in_id=sentry_check_in_id,
         status=MonitorStatus.OK,
     )
+
+    # Report success to Better Stack
+    if betterstack_heartbeat_url:
+        print(f"Reporting heartbeat to {betterstack_heartbeat_url}")
+        response = requests.get(betterstack_heartbeat_url)
+        if not response.ok:
+            print(f"Failed!")
+        print(f"Response: [{response.status_code}]")
