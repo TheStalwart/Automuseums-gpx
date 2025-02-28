@@ -1,0 +1,218 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: Print help",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "-h"
+      ]
+    },
+    {
+      "name": "Python Debugger: No arguments",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose"
+      ]
+    },
+    {
+      "name": "Python Debugger: Low Profile mode",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--lowprofile"
+      ]
+    },
+    {
+      "name": "Python Debugger: US only",
+      // country with the most museums
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "United States"
+      ]
+    },
+    {
+      "name": "Python Debugger: CZ only",
+      // contains a multi-location "Museum of Historical Motorcycles"
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "Czechia"
+      ]
+    },
+    {
+      "name": "Python Debugger: Denmark only",
+      // some of the descriptions have dirty HTML
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "Denmark"
+      ]
+    },
+    {
+      "name": "Python Debugger: Estonia only",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "Estonia"
+      ]
+    },
+    {
+      "name": "Python Debugger: Jordan only",
+      // 1 museum, page contains non-ASCII symbols
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "Jordan"
+      ]
+    },
+    {
+      "name": "Python Debugger: Germany only",
+      // Edge cases in phone number formatting
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "Germany"
+      ]
+    },
+    {
+      "name": "Python Debugger: Lithuania only",
+      // for debugging link parsing
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "Lithuania"
+      ]
+    },
+    {
+      "name": "Python Debugger: Ghana only",
+      // 0 museums, but is mentioned on the website's country list
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "Ghana"
+      ]
+    },
+    {
+      "name": "Python Debugger: Bosnia only",
+      // contains ampersand in country URL
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "Bosnia"
+      ]
+    },
+    {
+      "name": "Python Debugger: New Zealand only",
+      // contains "unusual line separators"
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "New Zealand"
+      ]
+    },
+    {
+      "name": "Generate Grouped GPX",
+      // generates GPX files grouped by region
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--lowprofile",
+        "--cache-ttl-countrylist",
+        "9999",
+        "--cache-ttl-museumlist",
+        "999",
+        "--cache-ttl-museumpage",
+        "999",
+        "--request-delay",
+        "0",
+        "--group"
+      ]
+    },
+    {
+      "name": "Regenerate all GPX from cache",
+      // generates GPX files grouped by region
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--cache-ttl-countrylist",
+        "9999",
+        "--cache-ttl-museumlist",
+        "999",
+        "--cache-ttl-museumpage",
+        "999",
+        "--group"
+      ]
+    },
+  ]
+}

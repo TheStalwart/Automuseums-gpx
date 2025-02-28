@@ -1,0 +1,14 @@
+{
+  "files.trimTrailingWhitespace": true,
+  "files.eol": "\n",
+  "[jsonc]": {
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "editor.defaultFormatter": "vscode.json-language-features",
+    // When opening a file, `editor.tabSize` and `editor.insertSpaces`
+    // will be detected based on the file contents. Set to false to keep
+    // the values you've explicitly set, above.
+    // https://stackoverflow.com/a/29972553
+    "editor.detectIndentation": false
+  }
+}
