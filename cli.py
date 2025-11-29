@@ -42,7 +42,18 @@ OUTPUT_FILENAME_PREFIX = "Automuseums.info - "
 
 GPX_CREATOR = 'https://github.com/TheStalwart/Automuseums-gpx'
 
-def load_countries():
+def load_country_list():
+    """
+    Load and parse the Automuseums.info homepage to build a list of countries and their cache metadata.
+
+    Returns:
+      List[dict]: A list of country metadata dictionaries with keys:
+        - name (str): Country display name.
+        - relative_url (str): relative URL to the first page of museum list of the country.
+        - absolute_url (str): absolute URL to the first page of museum list of the country.
+        - cache_path (str): Path to a directory used to store cached pages for that country.
+        - cache_timestamp (float): Modification timestamp of the cache file of the first page of museum list, or 0 if no cache file is present.
+    """
     cache_file_path = os.path.join(CACHE_ROOT, 'homepage.html')
 
     def download_homepage():
@@ -448,17 +459,17 @@ if args.lowprofile:
     sentry_sdk.profiler.start_profiler()
 
 # Refresh country list
-countries = load_countries()
+country_list = load_country_list()
 country_indexes = []
 
 if args.country:
-    country_search_results = list(filter(lambda c: c['name'] == args.country, countries))
+    country_search_results = list(filter(lambda c: c['name'] == args.country, country_list))
     if len(country_search_results) < 1:
         # technically, a clean exit
         # even though no useful work has been done
         os.remove(lock_file_path)
 
-        readable_country_list = ', '.join(map(lambda country: country['name'], countries))
+        readable_country_list = ', '.join(map(lambda country: country['name'], country_list))
         sys.exit(f"Country \"{args.country}\" not found.\n\nTry any of these: {readable_country_list}")
 
     selected_country = country_search_results[0]
@@ -466,11 +477,11 @@ if args.country:
 else:
     if args.lowprofile:
         print('Keeping low profile, updating 1 country with oldest cache...')
-        selected_country = sorted(countries, key=lambda c: c['cache_timestamp'])[0]
+        selected_country = sorted(country_list, key=lambda c: c['cache_timestamp'])[0]
         country_indexes.append(download_country_index(selected_country))
     else:
         print('Updating all country indexes...')
-        for selected_country in countries:
+        for selected_country in country_list:
             country_indexes.append(download_country_index(selected_country))
 
 for country in country_indexes:
@@ -619,7 +630,7 @@ if args.group:
             print(exc)
 
     # Extend groups definition with "All Countries"
-    groups['All countries'] = list(map(lambda c: c['name'], countries))
+    groups['All countries'] = list(map(lambda c: c['name'], country_list))
 
     # Load all generated per-country GPX files we need for groups defined in YAML config file
     required_countries = list(set(chain.from_iterable(groups.values())))
