@@ -7,7 +7,6 @@ import json
 import math
 import os
 import pathlib
-import random
 import sys
 import time
 import humanize
