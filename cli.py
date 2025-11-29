@@ -117,16 +117,69 @@ def load_country_list():
 
     return property_list
 
-def download_country_index(selected_country):
+def load_country_museum_list(selected_country):
+    """
+    Load and parse all museum list pages for a given country and return array of links to museum pages.
+
+    Args:
+      selected_country (dict): Country metadata dictionary returned by load_country_list(), with keys:
+          - name (str)
+          - relative_url (str)
+          - absolute_url (str)
+          - cache_path (str)
+          - cache_timestamp (float)
+
+    Returns:
+      dict: A dictionary with keys:
+        - 'country' (dict): The original selected_country argument.
+        - 'museums' (List[dict]): A list of museum metadata dictionaries, each having:
+            - 'name' (str)
+            - 'relative_url' (str)
+            - 'absolute_url' (str)
+    """
     if not os.path.isdir(selected_country['cache_path']):
         os.mkdir(selected_country['cache_path'])
 
-    def format_return_value(index):
-        return { 'country': selected_country, 'museums': index }
+    def format_return_value(museum_list):
+        """
+        Deduplicate and return a list of museums
+
+        Museum list pages will display duplicates
+        when a particular museum info page contains multiple locations.
+        We deduplicate entries when building an index of museums,
+        then produce multiple waypoints when building GPX files.
+
+        Museum pages listing multiple locations, as of January 2025:
+        - https://automuseums.info/czech-republic/museum-historical-motorcycles
+        - https://automuseums.info/germany/fire-museum-schw%C3%A4bisch-hall
+        - https://automuseums.info/australia/sir-henry-royce-foundation
+        - https://automuseums.info/canada/western-development-museum
+        - https://automuseums.info/russia/museum-vintage-motorcycles-and-antiques
+        - https://automuseums.info/index.php/slovakia/skoda-classic-cars-museum
+        - https://automuseums.info/switzerland/saurer-museum
+        - https://automuseums.info/uruguay/eduardo-iglesias-automobile-museum
+        - https://automuseums.info/iran/abadan-gasoline-house-museum (only one address)
+        """
+
+        deduplicated_museum_list = reduce(lambda l, x: l.append(x) or l if x not in l else l, museum_list, []) # https://stackoverflow.com/a/37163210
+        return { 'country': selected_country, 'museums': deduplicated_museum_list }
+
+    def parse_museum_list_page(soup):
+        """
+        Read museum list html parsed with BeautifulSoup and return names and URLs of found museums
+        """
+        museum_blocks = soup.find_all(class_='node-readmore')
+
+        def define_museum_properties(li_tag):
+            a_tag = li_tag.find('a')
+            name = a_tag['title'].strip()
+            return { 'name': name, 'relative_url': a_tag['href'], 'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}" }
+
+        return list(map(define_museum_properties, museum_blocks))
 
     def download_index():
         print(f"Downloading [yellow]{selected_country['name']}[/yellow]...")
-        index_pages = []
+        full_museum_list = []
 
         # Delete old cache
         for old_cache_file in sorted(glob.glob(os.path.join(selected_country['cache_path'], "[0-9]*.html"))):
@@ -134,33 +187,32 @@ def download_country_index(selected_country):
             os.remove(old_cache_file)
 
         # Redownload country's index of museums
-        museum_list_url = f"{WEBSITE_ROOT_URL}{selected_country['relative_url']}"
+        museum_list_url = selected_country['absolute_url']
         for page_index in range(100): # make sure we never get stuck in infinite loop
             cached_file_name = f"{page_index}.html".rjust(7, '0') # make all page numbers double-digits for easier sorting when loading cache
             cached_page_path = os.path.join(selected_country['cache_path'], cached_file_name)
             r = requests.get(museum_list_url, params={'page': page_index})
             print(f"Downloaded {r.url}")
-            page_contents = r.text
+            html_contents = r.text
 
             with open(cached_page_path, "w", encoding="utf-8") as f:
-                f.write(page_contents)
+                f.write(html_contents)
 
-            if args.request_delay > 0:
-                time.sleep(args.request_delay)
-
-            soup = BeautifulSoup(page_contents, 'html.parser')
-
-            index_pages.append(soup)
+            soup = BeautifulSoup(html_contents, 'html.parser')
+            full_museum_list.extend(parse_museum_list_page(soup))
 
             if not soup.find(title='Go to next page'):
                 print(f"Link to next page not found, bailing out")
                 break
+            else:
+                if args.request_delay > 0:
+                    time.sleep(args.request_delay)
 
-        return index_pages
+        return full_museum_list
 
     cache_file_path = os.path.join(selected_country['cache_path'], "00.html")
     if not os.path.isfile(cache_file_path):
-        return format_return_value(parse_country_index(download_index()))
+        return format_return_value(download_index())
     else:
         current_timestamp = time.time()
         cache_file_age_seconds = current_timestamp - selected_country['cache_timestamp']
@@ -169,7 +221,7 @@ def download_country_index(selected_country):
 
         if cache_file_age_hours < args.cache_ttl_museumlist:
             print("Loading cached index...")
-            index_pages = []
+            full_museum_list = []
 
             sorted_cache_file_path_array = sorted(glob.glob(os.path.join(selected_country['cache_path'], "[0-9]*.html")))
             for cache_file_path in sorted_cache_file_path_array:
@@ -177,43 +229,11 @@ def download_country_index(selected_country):
                 with open(cache_file_path, 'r', encoding="utf-8") as f:
                     html_contents = f.read()
                     soup = BeautifulSoup(html_contents, 'html.parser')
+                    full_museum_list.extend(parse_museum_list_page(soup))
 
-                    index_pages.append(soup)
-
-            return format_return_value(parse_country_index(index_pages))
+            return format_return_value(full_museum_list)
         else:
-            return format_return_value(parse_country_index(download_index()))
-
-def parse_country_index(pages):
-    museums = []
-
-    for page in pages:
-        museum_blocks = page.find_all(class_='node-readmore')
-
-        def define_museum_properties(li_tag):
-            a_tag = li_tag.find('a')
-            name = a_tag['title'].strip()
-            return { 'name': name, 'relative_url': a_tag['href'], 'absolute_url': f"{WEBSITE_ROOT_URL}{a_tag['href']}" }
-
-        museums.extend(list(map(define_museum_properties, museum_blocks)))
-
-    # Museum list pages will display duplicates
-    # when a particular museum info page contains multiple locations.
-    # We deduplicate entries when building an index of museums,
-    # then produce multiple waypoints when building GPX files.
-    # Museum pages listing multiple locations, as of January 2025:
-    # - https://automuseums.info/czech-republic/museum-historical-motorcycles
-    # - https://automuseums.info/germany/fire-museum-schw%C3%A4bisch-hall
-    # - https://automuseums.info/australia/sir-henry-royce-foundation
-    # - https://automuseums.info/canada/western-development-museum
-    # - https://automuseums.info/russia/museum-vintage-motorcycles-and-antiques
-    # - https://automuseums.info/index.php/slovakia/skoda-classic-cars-museum
-    # - https://automuseums.info/switzerland/saurer-museum
-    # - https://automuseums.info/uruguay/eduardo-iglesias-automobile-museum
-    # - https://automuseums.info/iran/abadan-gasoline-house-museum (only one address)
-    unique_museums = reduce(lambda l, x: l.append(x) or l if x not in l else l, museums, []) # https://stackoverflow.com/a/37163210
-
-    return unique_museums
+            return format_return_value(download_index())
 
 def load_museum_page(country, museums, museum_properties):
     cache_museum_root_path = os.path.join(country['cache_path'], 'museums')
@@ -473,16 +493,16 @@ if args.country:
         sys.exit(f"Country \"{args.country}\" not found.\n\nTry any of these: {readable_country_list}")
 
     selected_country = country_search_results[0]
-    country_indexes.append(download_country_index(selected_country))
+    country_indexes.append(load_country_museum_list(selected_country))
 else:
     if args.lowprofile:
         print('Keeping low profile, updating 1 country with oldest cache...')
         selected_country = sorted(country_list, key=lambda c: c['cache_timestamp'])[0]
-        country_indexes.append(download_country_index(selected_country))
+        country_indexes.append(load_country_museum_list(selected_country))
     else:
         print('Updating all country indexes...')
         for selected_country in country_list:
-            country_indexes.append(download_country_index(selected_country))
+            country_indexes.append(load_country_museum_list(selected_country))
 
 for country in country_indexes:
     print(f"Loading {len(country['museums'])} museums of [yellow]{country['country']['name']}[/yellow]...")
