@@ -187,9 +187,9 @@
         "--cache-ttl-countrylist",
         "9999",
         "--cache-ttl-museumlist",
-        "999",
+        "9999",
         "--cache-ttl-museumpage",
-        "999",
+        "9999",
         "--request-delay",
         "0",
         "--group"
@@ -208,9 +208,9 @@
         "--cache-ttl-countrylist",
         "9999",
         "--cache-ttl-museumlist",
-        "999",
+        "9999",
         "--cache-ttl-museumpage",
-        "999",
+        "9999",
         "--group"
       ]
     },
