@@ -12,7 +12,7 @@ Download generated GPX files here: [https://automuseums.tldrtravel.info](https:/
 Display help:
 `.venv/bin/python3 cli.py --help`
 
-Generate all possible output GPX files:
+Generate all possible output GPX files (uses 1GB of RAM):
 `.venv/bin/python3 cli.py --group`
 
 Regenerate output files with current cache:
