@@ -10,7 +10,9 @@ import pathlib
 import sys
 import time
 import humanize
-import requests
+from requests import Session
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
 from rich import print
 from rich.pretty import pprint
@@ -444,6 +446,15 @@ arg_parser.add_argument('--verbose', action='store_true', help='Print data used 
 arg_parser.add_argument('--omit-time', action='store_true', help='Omit <time> tag from generated GPX files')
 
 args = arg_parser.parse_args()
+
+# Set up a customized instance of Requests library
+# to avoid crashing on monthly DNS resolution failures
+# https://stackoverflow.com/questions/23013220/max-retries-exceeded-with-url-in-requests
+requests = Session()
+request_retry_config = Retry(total=5, backoff_factor=args.request_delay)
+http_adapter = HTTPAdapter(max_retries=request_retry_config)
+requests.mount('http://', http_adapter)
+requests.mount('https://', http_adapter)
 
 # Make sure we don't run more than one instance
 # on the same set of cache/output folders
