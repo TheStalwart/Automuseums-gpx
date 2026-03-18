@@ -15,5 +15,8 @@ sentry.dsn
 heartbeat.url
 cli.lock
 
+# i kept a copy of old caches during Drupal -> Wordpress rewrite
+cache.drupal/
+
 # macOS litter
 .DS_Store
