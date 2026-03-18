@@ -690,8 +690,15 @@ for country in country_indexes:
         OUTPUT_ROOT_JSON.mkdir()
     json_output_file_name = f"{country['country']['name']}.json"
     json_output_file_path = Path(OUTPUT_ROOT_JSON) / json_output_file_name
+
+    class CountryEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, Path):
+                return str(obj)
+            return super().default(obj)
+
     with json_output_file_path.open("w", encoding="utf-8") as json_output_file:
-        json.dump(country, json_output_file, indent=2)
+        json.dump(country, json_output_file, indent=2, cls=CountryEncoder)
 
 if args.verbose:
     rprint(country_indexes)
