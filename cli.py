@@ -59,8 +59,9 @@ def load_country_list():
           of the country's museum list.
         - cache_path (str): Path to a directory
           used to store cached pages for that country.
-        - cache_timestamp (float): Modification timestamp
-          of the cache file for the first page of the museum list,
+        - cache_index_path (Path): Museum list cache JSON file path
+        - cache_index_timestamp (float): Modification timestamp
+          of the museum list cache JSON file,
           or 0 if no cache file is present.
     """
     cache_file_path = Path(CACHE_ROOT) / "homepage.html"
@@ -111,21 +112,22 @@ def load_country_list():
         relative_url = f"/museums/?country={name}"
 
         cache_path = Path(CACHE_COUNTRY_ROOT) / name
-        cache_file_path = Path(cache_path) / "00.html"
+        cache_index_path = Path(cache_path) / "index.json"
 
         # countries with missing cache will keep 0
         # and be first in queue to update in lowprofile mode
-        cache_timestamp = 0
+        cache_index_timestamp = 0
 
-        if cache_file_path.is_file():
-            cache_timestamp = cache_file_path.stat().st_mtime
+        if cache_index_path.is_file():
+            cache_index_timestamp = cache_index_path.stat().st_mtime
 
         return {
             "name": name,
             "relative_url": relative_url,
             "absolute_url": f"{WEBSITE_ROOT_URL}{relative_url}",
             "cache_path": cache_path,
-            "cache_timestamp": cache_timestamp,
+            "cache_index_path": cache_index_path,
+            "cache_index_timestamp": cache_index_timestamp,
         }
 
     return list(map(define_country_properties, countries))
@@ -143,15 +145,24 @@ def load_country_museum_list(selected_country):
             - relative_url (str)
             - absolute_url (str)
             - cache_path (str)
-            - cache_timestamp (float)
+            - cache_index_path (Path)
+            - cache_index_timestamp (float)
 
     Returns:
         dict: A dictionary with keys:
         - 'country' (dict): The original selected_country argument.
         - 'museums' (List[dict]): A list of museum metadata dictionaries, each having:
-            - 'name' (str)
-            - 'relative_url' (str)
-            - 'absolute_url' (str)
+            - 'id' (float)
+            - 'title' (str)
+            - 'permalink' (str)
+            - 'excerpt' (str)
+            - 'featured_image' (str)
+            - 'country' (str)
+            - 'city' (str)
+            - 'vehicle_types' (List[str])
+            - 'latitude' (str)
+            - 'longitude' (str)
+            - 'is_fiva_member' (bool)
     """
     if not selected_country["cache_path"].is_dir():
         selected_country["cache_path"].mkdir()
@@ -160,10 +171,17 @@ def load_country_museum_list(selected_country):
         """
         Deduplicate and return a list of museums
 
-        Museum list pages will display duplicates
-        when a particular museum info page contains multiple locations.
-        We deduplicate entries when building an index of museums,
-        then produce multiple waypoints when building GPX files.
+        Museum list pages on the old Drupal website would display duplicates
+        when a particular museum info page contained multiple locations.
+        We deduplicated entries when building an index of museums,
+        then produced multiple waypoints when building GPX files.
+
+        On January 30th, 2026, the website was migrated from Drupal to Wordpress,
+        and now the museums with multiple locations are not duplicated,
+        but only display a single geolocation.
+
+        This issue was found on March 18th, 2026,
+        during codebase migration to support the new Wordpress engine.
 
         Museum pages listing multiple locations, as of January 2025:
         - https://automuseums.info/czech-republic/museum-historical-motorcycles
@@ -177,79 +195,69 @@ def load_country_museum_list(selected_country):
         - https://automuseums.info/iran/abadan-gasoline-house-museum (only one address)
         """
 
-        deduplicated_museum_list = reduce(
-            lambda l, x: l.append(x) or l if x not in l else l,
-            museum_list,
-            [],
-        )  # https://stackoverflow.com/a/37163210
-        return {"country": selected_country, "museums": deduplicated_museum_list}
-
-    def parse_museum_list_page(soup):
-        """
-        Read museum list html parsed with BeautifulSoup
-        and return names and URLs of found museums
-        """
-        museum_blocks = soup.find_all(class_="node-readmore")
-
-        def define_museum_properties(li_tag):
-            a_tag = li_tag.find("a")
-            name = a_tag["title"].strip()
-            return {
-                "name": name,
-                "relative_url": a_tag["href"],
-                "absolute_url": f"{WEBSITE_ROOT_URL}{a_tag['href']}",
-            }
-
-        return list(map(define_museum_properties, museum_blocks))
+        return {"country": selected_country, "museums": museum_list}
 
     def download_index():
         rprint(f"Downloading [yellow]{selected_country['name']}[/yellow]...")
         full_museum_list = []
 
         # Delete old cache
-        for old_cache_file in sorted(
-            Path(selected_country["cache_path"]).glob("[0-9]*.html"),
-        ):
-            rprint(f"Deleting old cache file: {old_cache_file}")
-            old_cache_file.unlink()
+        rprint(
+            "Deleting old museum index cache file:"
+            f" {selected_country['cache_index_path']}",
+        )
+        if selected_country["cache_index_path"].is_file():
+            selected_country["cache_index_path"].unlink()
 
         # Redownload country's index of museums
-        museum_list_url = selected_country["absolute_url"]
-        for page_index in range(100):  # make sure we never get stuck in infinite loop
-            # make all page numbers are double-digits
-            # for easier sorting when loading cache
-            cached_file_name = f"{page_index}.html".rjust(
-                7,
-                "0",
+        museum_list_url = f"{WEBSITE_ROOT_URL}/wp-json/automuseums/v1/museums/filter"
+        for page_index in range(
+            1,
+            100,  # make sure we never get stuck in infinite loop
+        ):
+            # On new WordPress-based website,
+            # orderby parameter has "date" option now.
+            # Could i request museums ordered by date
+            # to avoid rescraping data that didn't change?
+            # Next time i report an issue, e.g. bad geo coordinates,
+            # check if museum order has changed in response.
+
+            r = requests.get(
+                museum_list_url,
+                params={
+                    "country": selected_country["name"],
+                    "orderby": "name",
+                    "page": page_index,
+                    "per_page": 100,  # maximum supported by WordPress
+                },
             )
-
-            cached_page_path = Path(selected_country["cache_path"]) / cached_file_name
-
-            r = requests.get(museum_list_url, params={"page": page_index})
             rprint(f"Downloaded {r.url}")
-            html_contents = r.text
+            json_contents = r.json()
 
-            with cached_page_path.open("w", encoding="utf-8") as f:
-                f.write(html_contents)
+            full_museum_list.extend(json_contents["museums"])
 
-            soup = BeautifulSoup(html_contents, "html.parser")
-            full_museum_list.extend(parse_museum_list_page(soup))
-
-            if not soup.find(title="Go to next page"):
-                rprint("Link to next page not found, bailing out")
+            if json_contents["current_page"] == json_contents["pages"]:
+                rprint("Next page not found, bailing out")
                 break
 
             if args.request_delay > 0:
                 time.sleep(args.request_delay)
 
+        with selected_country["cache_index_path"].open(
+            "w",
+            encoding="utf-8",
+        ) as json_output_file:
+            json.dump({"museums": full_museum_list}, json_output_file, indent=2)
+
         return full_museum_list
 
-    cache_file_path = Path(selected_country["cache_path"]) / "00.html"
-    if not cache_file_path.is_file():
+    if not selected_country["cache_index_path"].is_file():
         return format_return_value(download_index())
 
     current_timestamp = time.time()
-    cache_file_age_seconds = current_timestamp - selected_country["cache_timestamp"]
+    cache_file_age_seconds = (
+        current_timestamp - selected_country["cache_index_timestamp"]
+    )
     cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
     rprint(
         f"[yellow]{selected_country['name']}[/yellow] index cache"
@@ -260,15 +268,9 @@ def load_country_museum_list(selected_country):
         rprint("Loading cached index...")
         full_museum_list = []
 
-        sorted_cache_file_path_array = sorted(
-            Path(selected_country["cache_path"]).glob("[0-9]*.html"),
-        )
-        for cache_file_path in sorted_cache_file_path_array:
-            rprint(f"Loading cache from {cache_file_path}...")
-            with cache_file_path.open("r", encoding="utf-8") as f:
-                html_contents = f.read()
-                soup = BeautifulSoup(html_contents, "html.parser")
-                full_museum_list.extend(parse_museum_list_page(soup))
+        with selected_country["cache_index_path"].open("r") as f:
+            data = json.load(f)
+            full_museum_list.extend(data["museums"])
 
         return format_return_value(full_museum_list)
 
