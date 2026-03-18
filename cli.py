@@ -648,7 +648,7 @@ if args.country:
         lock_file_path.unlink()
 
         readable_country_list = ", ".join(
-            map(lambda country: country["name"], country_list),
+            (country["name"] for country in country_list),
         )
         sys.exit(
             f'Country "{args.country}" not found.\n\n'
