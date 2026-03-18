@@ -535,7 +535,7 @@ def report_failure_and_exit():
     sys.exit(1)
 
 
-start_datetime = datetime.datetime.now()
+start_datetime = datetime.datetime.now(datetime.timezone.utc)
 
 # Ensure cache folders exist
 if not CACHE_ROOT.is_dir():
@@ -917,7 +917,7 @@ if args.group:
             )
 
 humanized_execution_duration = humanize.precisedelta(
-    datetime.datetime.now() - start_datetime,
+    datetime.datetime.now(datetime.timezone.utc) - start_datetime,
     minimum_unit="seconds",
     format="%.0f",
 )
