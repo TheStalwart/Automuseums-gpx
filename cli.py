@@ -17,7 +17,7 @@ import yaml
 from bs4 import BeautifulSoup
 from requests import Session
 from requests.adapters import HTTPAdapter
-from rich import print
+from rich import print as rprint
 from rich.pretty import pprint
 from sentry_sdk.crons import capture_checkin
 from sentry_sdk.crons.consts import MonitorStatus
@@ -66,7 +66,7 @@ def load_country_list():
     cache_file_path = Path(CACHE_ROOT) / "homepage.html"
 
     def download_homepage():
-        print("Downloading country list...")
+        rprint("Downloading country list...")
         r = requests.get(f"{WEBSITE_ROOT_URL}/homepage")
         homepage_contents = r.text
 
@@ -86,13 +86,13 @@ def load_country_list():
         current_timestamp = time.time()
         cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
         cache_file_age_minutes = math.floor(cache_file_age_seconds / 60)
-        print(
+        rprint(
             "Country cache file is"
             f" {cache_file_age_minutes}/{args.cache_ttl_countrylist} minutes old",
         )
 
         if cache_file_age_minutes < args.cache_ttl_countrylist:
-            print("Loading cached country list...")
+            rprint("Loading cached country list...")
             with cache_file_path.open("r", encoding="utf-8") as f:
                 html_contents = f.read()
         else:
@@ -210,14 +210,14 @@ def load_country_museum_list(selected_country):
         return list(map(define_museum_properties, museum_blocks))
 
     def download_index():
-        print(f"Downloading [yellow]{selected_country['name']}[/yellow]...")
+        rprint(f"Downloading [yellow]{selected_country['name']}[/yellow]...")
         full_museum_list = []
 
         # Delete old cache
         for old_cache_file in sorted(
             Path(selected_country["cache_path"]).glob("[0-9]*.html"),
         ):
-            print(f"Deleting old cache file: {old_cache_file}")
+            rprint(f"Deleting old cache file: {old_cache_file}")
             old_cache_file.unlink()
 
         # Redownload country's index of museums
@@ -233,7 +233,7 @@ def load_country_museum_list(selected_country):
             cached_page_path = Path(selected_country["cache_path"]) / cached_file_name
 
             r = requests.get(museum_list_url, params={"page": page_index})
-            print(f"Downloaded {r.url}")
+            rprint(f"Downloaded {r.url}")
             html_contents = r.text
 
             with cached_page_path.open("w", encoding="utf-8") as f:
@@ -243,7 +243,7 @@ def load_country_museum_list(selected_country):
             full_museum_list.extend(parse_museum_list_page(soup))
 
             if not soup.find(title="Go to next page"):
-                print("Link to next page not found, bailing out")
+                rprint("Link to next page not found, bailing out")
                 break
             elif args.request_delay > 0:
                 time.sleep(args.request_delay)
@@ -257,20 +257,20 @@ def load_country_museum_list(selected_country):
         current_timestamp = time.time()
         cache_file_age_seconds = current_timestamp - selected_country["cache_timestamp"]
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
-        print(
+        rprint(
             f"[yellow]{selected_country['name']}[/yellow] index cache"
             f" is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old",
         )
 
         if cache_file_age_hours < args.cache_ttl_museumlist:
-            print("Loading cached index...")
+            rprint("Loading cached index...")
             full_museum_list = []
 
             sorted_cache_file_path_array = sorted(
                 Path(selected_country["cache_path"]).glob("[0-9]*.html"),
             )
             for cache_file_path in sorted_cache_file_path_array:
-                print(f"Loading cache from {cache_file_path}...")
+                rprint(f"Loading cache from {cache_file_path}...")
                 with cache_file_path.open("r", encoding="utf-8") as f:
                     html_contents = f.read()
                     soup = BeautifulSoup(html_contents, "html.parser")
@@ -313,7 +313,7 @@ def load_museum_page(country, museums, museum_properties):
 
     def download_page():
         r = requests.get(f"{WEBSITE_ROOT_URL}{museum_properties['relative_url']}")
-        print(
+        rprint(
             f"Downloaded {museums.index(museum_properties) + 1}/{len(museums)} {r.url}",
         )
         page_contents = r.text
@@ -335,7 +335,7 @@ def load_museum_page(country, museums, museum_properties):
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
 
         if cache_file_age_hours < args.cache_ttl_museumpage:
-            print(
+            rprint(
                 f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old"
                 " cached museum page"
                 f" for [yellow]{museum_properties['name']}[/yellow]...",
@@ -527,11 +527,11 @@ except OSError:
 
 def report_failure_and_exit():
     if betterstack_heartbeat_url:
-        print(f"Reporting heartbeat to {betterstack_heartbeat_url}/fail")
+        rprint(f"Reporting heartbeat to {betterstack_heartbeat_url}/fail")
         response = requests.get(f"{betterstack_heartbeat_url}/fail")
         if not response.ok:
-            print("Failed!")
-        print(f"Response: [{response.status_code}]")
+            rprint("Failed!")
+        rprint(f"Response: [{response.status_code}]")
     sys.exit(1)
 
 
@@ -615,14 +615,14 @@ if lock_file_path.is_file():
     # e.g. due to host machine power failure,
     # recreate the lock and carry on
     if args.lowprofile and lock_file_path.stat().st_mtime < time.time() - 60 * 60 * 24:
-        print("[red]Deleting stale lock file[/red]")
+        rprint("[red]Deleting stale lock file[/red]")
         lock_file_path.unlink()
     elif (
         sys.gettrace() or "debugpy" in sys.modules
     ):  # https://stackoverflow.com/a/72977762/5337349
-        print("[red]Lock file ignored due to debugging[/red]")
+        rprint("[red]Lock file ignored due to debugging[/red]")
     else:
-        print("[red]Another instance of the script is running, exiting[/red]")
+        rprint("[red]Another instance of the script is running, exiting[/red]")
         report_failure_and_exit()
 lock_file_path.open("w").close()
 
@@ -664,16 +664,16 @@ if args.country:
     selected_country = country_search_results[0]
     country_indexes.append(load_country_museum_list(selected_country))
 elif args.lowprofile:
-    print("Keeping low profile, updating 1 country with oldest cache...")
+    rprint("Keeping low profile, updating 1 country with oldest cache...")
     selected_country = sorted(country_list, key=lambda c: c["cache_timestamp"])[0]
     country_indexes.append(load_country_museum_list(selected_country))
 else:
-    print("Updating all country indexes...")
+    rprint("Updating all country indexes...")
     for selected_country in country_list:
         country_indexes.append(load_country_museum_list(selected_country))
 
 for country in country_indexes:
-    print(
+    rprint(
         f"Loading {len(country['museums'])} museums"
         f" of [yellow]{country['country']['name']}[/yellow]...",
     )
@@ -686,7 +686,7 @@ for country in country_indexes:
         museum_properties["cache_file_path"] = cache_file_path
         museum_properties.update(parse_museum_page(page, museum_properties))
     if not args.verbose:
-        print(
+        rprint(
             f"Parsed [yellow]{country['country']['name']}[/yellow]:"
             f" {len(country['museums'])} museums",
         )
@@ -699,7 +699,7 @@ for country in country_indexes:
         json.dump(country, json_output_file, indent=2)
 
 if args.verbose:
-    print(country_indexes)
+    rprint(country_indexes)
 
 # Generate per-country GPX files
 # https://github.com/tkrajina/gpxpy/blob/dev/examples/waypoints_example.py
@@ -836,9 +836,9 @@ for country in country_indexes:
     if len(gpx.waypoints) > 0:
         with output_file_path.open("w", encoding="utf-8") as f:
             f.write(gpx.to_xml())
-        print(f"Generated [cyan]{output_file_name}[/cyan]")
+        rprint(f"Generated [cyan]{output_file_name}[/cyan]")
     else:
-        print(
+        rprint(
             f"Not generating [red]{output_file_name}[/red]"
             f" due to {len(gpx.waypoints)} museums"
             f" in [yellow]{country['country']['name']}[/yellow]",
@@ -854,10 +854,10 @@ if args.group:
     with group_config_file_path.open() as stream:
         try:
             groups = yaml.safe_load(stream)
-            print(f"Loaded {CONFIG_GROUP_FILENAME}:")
+            rprint(f"Loaded {CONFIG_GROUP_FILENAME}:")
             pprint(groups)
         except yaml.YAMLError as exc:
-            print(exc)
+            rprint(exc)
 
     # Extend groups definition with "All Countries"
     groups["All countries"] = list(map(lambda c: c["name"], country_list))
@@ -871,7 +871,7 @@ if args.group:
         file_path = Path(OUTPUT_ROOT_PER_COUNTRY) / country_file_name
 
         if not file_path.is_file():
-            print(f"Warning: missing [red]{country_file_name}[/red]")
+            rprint(f"Warning: missing [red]{country_file_name}[/red]")
             return None
 
         with file_path.open("r", encoding="utf-8") as gpx_file:
@@ -909,9 +909,9 @@ if args.group:
         if len(gpx.waypoints) > 0:
             with group_output_file_path.open("w", encoding="utf-8") as f:
                 f.write(gpx.to_xml())
-            print(f"Generated [magenta]{group_output_file_name}[/magenta]")
+            rprint(f"Generated [magenta]{group_output_file_name}[/magenta]")
         else:
-            print(
+            rprint(
                 f"Not generating [red]{group_output_file_name}[/red]"
                 f" due to {len(gpx.waypoints)} museums in {group_name}",
             )
@@ -921,7 +921,7 @@ humanized_execution_duration = humanize.precisedelta(
     minimum_unit="seconds",
     format="%.0f",
 )
-print(f"Completed in {humanized_execution_duration}")
+rprint(f"Completed in {humanized_execution_duration}")
 
 # Clean exit
 lock_file_path.unlink()
@@ -935,8 +935,8 @@ if args.lowprofile:
 
     # Report success to Better Stack
     if betterstack_heartbeat_url:
-        print(f"Reporting heartbeat to {betterstack_heartbeat_url}")
+        rprint(f"Reporting heartbeat to {betterstack_heartbeat_url}")
         response = requests.get(betterstack_heartbeat_url)
         if not response.ok:
-            print("Failed!")
-        print(f"Response: [{response.status_code}]")
+            rprint("Failed!")
+        rprint(f"Response: [{response.status_code}]")
