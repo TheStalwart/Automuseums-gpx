@@ -245,9 +245,8 @@ def load_country_museum_list(selected_country):
             if not soup.find(title="Go to next page"):
                 print("Link to next page not found, bailing out")
                 break
-            else:
-                if args.request_delay > 0:
-                    time.sleep(args.request_delay)
+            elif args.request_delay > 0:
+                time.sleep(args.request_delay)
 
         return full_museum_list
 
@@ -618,14 +617,13 @@ if lock_file_path.is_file():
     if args.lowprofile and lock_file_path.stat().st_mtime < time.time() - 60 * 60 * 24:
         print("[red]Deleting stale lock file[/red]")
         lock_file_path.unlink()
+    elif (
+        sys.gettrace() or "debugpy" in sys.modules
+    ):  # https://stackoverflow.com/a/72977762/5337349
+        print("[red]Lock file ignored due to debugging[/red]")
     else:
-        if (
-            sys.gettrace() or "debugpy" in sys.modules
-        ):  # https://stackoverflow.com/a/72977762/5337349
-            print("[red]Lock file ignored due to debugging[/red]")
-        else:
-            print("[red]Another instance of the script is running, exiting[/red]")
-            report_failure_and_exit()
+        print("[red]Another instance of the script is running, exiting[/red]")
+        report_failure_and_exit()
 lock_file_path.open("w").close()
 
 # Check-in with Sentry cron monitoring
@@ -665,15 +663,14 @@ if args.country:
 
     selected_country = country_search_results[0]
     country_indexes.append(load_country_museum_list(selected_country))
+elif args.lowprofile:
+    print("Keeping low profile, updating 1 country with oldest cache...")
+    selected_country = sorted(country_list, key=lambda c: c["cache_timestamp"])[0]
+    country_indexes.append(load_country_museum_list(selected_country))
 else:
-    if args.lowprofile:
-        print("Keeping low profile, updating 1 country with oldest cache...")
-        selected_country = sorted(country_list, key=lambda c: c["cache_timestamp"])[0]
+    print("Updating all country indexes...")
+    for selected_country in country_list:
         country_indexes.append(load_country_museum_list(selected_country))
-    else:
-        print("Updating all country indexes...")
-        for selected_country in country_list:
-            country_indexes.append(load_country_museum_list(selected_country))
 
 for country in country_indexes:
     print(
