@@ -512,7 +512,7 @@ try:
         # of transactions for tracing.
         traces_sample_rate=1.0,
     )
-except sentry_sdk.utils.BadDsn:
+except (OSError, sentry_sdk.utils.BadDsn):
     pass
 
 # Attempt to load Better Stack heartbeat token
