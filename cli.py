@@ -80,7 +80,7 @@ def load_country_list():
         cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
         cache_file_age_minutes = math.floor(cache_file_age_seconds / 60)
         print(
-            f"Country cache file is {cache_file_age_minutes}/{args.cache_ttl_countrylist} minutes old"
+            f"Country cache file is {cache_file_age_minutes}/{args.cache_ttl_countrylist} minutes old",
         )
 
         if cache_file_age_minutes < args.cache_ttl_countrylist:
@@ -93,7 +93,7 @@ def load_country_list():
     # Parse homepage HTML
     soup = BeautifulSoup(html_contents, "html.parser")
     countries = soup.find(id="block-searchmuseumsin").find_all(
-        "a"
+        "a",
     )  # https://beautiful-soup-4.readthedocs.io/en/latest/#navigating-the-tree
 
     def define_country_properties(a_tag):
@@ -169,7 +169,9 @@ def load_country_museum_list(selected_country):
         """
 
         deduplicated_museum_list = reduce(
-            lambda l, x: l.append(x) or l if x not in l else l, museum_list, []
+            lambda l, x: l.append(x) or l if x not in l else l,
+            museum_list,
+            [],
         )  # https://stackoverflow.com/a/37163210
         return {"country": selected_country, "museums": deduplicated_museum_list}
 
@@ -196,7 +198,7 @@ def load_country_museum_list(selected_country):
 
         # Delete old cache
         for old_cache_file in sorted(
-            Path(selected_country["cache_path"]).glob("[0-9]*.html")
+            Path(selected_country["cache_path"]).glob("[0-9]*.html"),
         ):
             print(f"Deleting old cache file: {old_cache_file}")
             old_cache_file.unlink()
@@ -205,7 +207,8 @@ def load_country_museum_list(selected_country):
         museum_list_url = selected_country["absolute_url"]
         for page_index in range(100):  # make sure we never get stuck in infinite loop
             cached_file_name = f"{page_index}.html".rjust(
-                7, "0"
+                7,
+                "0",
             )  # make all page numbers double-digits for easier sorting when loading cache
             cached_page_path = Path(selected_country["cache_path"]) / cached_file_name
 
@@ -236,7 +239,7 @@ def load_country_museum_list(selected_country):
         cache_file_age_seconds = current_timestamp - selected_country["cache_timestamp"]
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
         print(
-            f"[yellow]{selected_country['name']}[/yellow] index cache is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old"
+            f"[yellow]{selected_country['name']}[/yellow] index cache is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old",
         )
 
         if cache_file_age_hours < args.cache_ttl_museumlist:
@@ -244,7 +247,7 @@ def load_country_museum_list(selected_country):
             full_museum_list = []
 
             sorted_cache_file_path_array = sorted(
-                Path(selected_country["cache_path"]).glob("[0-9]*.html")
+                Path(selected_country["cache_path"]).glob("[0-9]*.html"),
             )
             for cache_file_path in sorted_cache_file_path_array:
                 print(f"Loading cache from {cache_file_path}...")
@@ -283,14 +286,14 @@ def load_museum_page(country, museums, museum_properties):
         -1
     ]  # always use last slug because there could be "/index.php/" in the middle
     sanitized_file_basename = "".join(
-        [x if x.isalnum() else "_" for x in name_slug]
+        [x if x.isalnum() else "_" for x in name_slug],
     )  # sanitize https://stackoverflow.com/a/295152
     cache_file_path = Path(cache_museum_root_path) / f"{sanitized_file_basename}.html"
 
     def download_page():
         r = requests.get(f"{WEBSITE_ROOT_URL}{museum_properties['relative_url']}")
         print(
-            f"Downloaded {museums.index(museum_properties) + 1}/{len(museums)} {r.url}"
+            f"Downloaded {museums.index(museum_properties) + 1}/{len(museums)} {r.url}",
         )
         page_contents = r.text
 
@@ -312,7 +315,7 @@ def load_museum_page(country, museums, museum_properties):
 
         if cache_file_age_hours < args.cache_ttl_museumpage:
             print(
-                f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old cached museum page for [yellow]{museum_properties['name']}[/yellow]..."
+                f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old cached museum page for [yellow]{museum_properties['name']}[/yellow]...",
             )
             with cache_file_path.open("r", encoding="utf-8") as f:
                 html_contents = f.read()
@@ -333,7 +336,7 @@ def parse_museum_page(page, museum_properties):
             map(
                 lambda a: {"url": a["href"], "title": a.text.strip()},
                 links_div.find_all("a"),
-            )
+            ),
         )
 
     body_div = content_div.find(class_="field--name-body")
@@ -364,8 +367,8 @@ def parse_museum_page(page, museum_properties):
                     map(
                         lambda a: {"url": a["href"], "title": a.text.strip()},
                         links_in_description,
-                    )
-                )
+                    ),
+                ),
             )
 
     original_name = None
@@ -388,7 +391,7 @@ def parse_museum_page(page, museum_properties):
             map(
                 lambda item_tag: item_tag.text,
                 display_div.find_all(class_="field-item"),
-            )
+            ),
         )
 
     info = None
@@ -419,7 +422,7 @@ def parse_museum_page(page, museum_properties):
             map(
                 lambda address_item_tag: address_item_tag.text.strip(),
                 address_div.find_all(class_="field-item"),
-            )
+            ),
         )
 
     email = None
@@ -431,7 +434,7 @@ def parse_museum_page(page, museum_properties):
             map(
                 lambda item_tag: item_tag.text.strip(),
                 email_div.find_all(class_="field-item"),
-            )
+            ),
         )
 
     phone = None
@@ -443,13 +446,13 @@ def parse_museum_page(page, museum_properties):
             map(
                 lambda item_tag: item_tag.text.strip(),
                 phone_div.find_all(class_="field-item"),
-            )
+            ),
         )
 
     drupal_node_id = page.find("article")["data-history-node-id"]
 
     data_json = page.find(
-        attrs={"data-drupal-selector": "drupal-settings-json"}
+        attrs={"data-drupal-selector": "drupal-settings-json"},
     ).contents[0]
     data = json.loads(data_json)
     leaflet_features = data["leaflet"][
@@ -457,7 +460,7 @@ def parse_museum_page(page, museum_properties):
     ]["features"]
     leaflet_points = list(filter(lambda f: f["type"] == "point", leaflet_features))
     coordinates = list(
-        map(lambda p: {"lat": p["lat"], "lon": p["lon"]}, leaflet_points)
+        map(lambda p: {"lat": p["lat"], "lon": p["lon"]}, leaflet_points),
     )
 
     return {
@@ -541,19 +544,27 @@ arg_parser.add_argument(
     help="Delay after every HTTPS request in seconds (default: %(default)s)",
 )
 arg_parser.add_argument(
-    "--lowprofile", action="store_true", help="Update 1 country with oldest cache"
+    "--lowprofile",
+    action="store_true",
+    help="Update 1 country with oldest cache",
 )
 arg_parser.add_argument(
-    "--group", action="store_true", help="Generate files grouped by region"
+    "--group",
+    action="store_true",
+    help="Generate files grouped by region",
 )
 arg_parser.add_argument(
-    "--verbose", action="store_true", help="Print data used to generate GPX files"
+    "--verbose",
+    action="store_true",
+    help="Print data used to generate GPX files",
 )
 
 # During development i often diff GPX output
 # and <time> tag makes output noisy
 arg_parser.add_argument(
-    "--omit-time", action="store_true", help="Omit <time> tag from generated GPX files"
+    "--omit-time",
+    action="store_true",
+    help="Omit <time> tag from generated GPX files",
 )
 
 args = arg_parser.parse_args()
@@ -608,7 +619,7 @@ country_indexes = []
 
 if args.country:
     country_search_results = list(
-        filter(lambda c: c["name"] == args.country, country_list)
+        filter(lambda c: c["name"] == args.country, country_list),
     )
     if len(country_search_results) < 1:
         # technically, a clean exit
@@ -616,10 +627,10 @@ if args.country:
         lock_file_path.unlink()
 
         readable_country_list = ", ".join(
-            map(lambda country: country["name"], country_list)
+            map(lambda country: country["name"], country_list),
         )
         sys.exit(
-            f'Country "{args.country}" not found.\n\nTry any of these: {readable_country_list}'
+            f'Country "{args.country}" not found.\n\nTry any of these: {readable_country_list}',
         )
 
     selected_country = country_search_results[0]
@@ -636,17 +647,19 @@ else:
 
 for country in country_indexes:
     print(
-        f"Loading {len(country['museums'])} museums of [yellow]{country['country']['name']}[/yellow]..."
+        f"Loading {len(country['museums'])} museums of [yellow]{country['country']['name']}[/yellow]...",
     )
     for museum_properties in country["museums"]:
         page, cache_file_path = load_museum_page(
-            country["country"], country["museums"], museum_properties
+            country["country"],
+            country["museums"],
+            museum_properties,
         )
         museum_properties["cache_file_path"] = cache_file_path
         museum_properties.update(parse_museum_page(page, museum_properties))
     if not args.verbose:
         print(
-            f"Parsed [yellow]{country['country']['name']}[/yellow]: {len(country['museums'])} museums"
+            f"Parsed [yellow]{country['country']['name']}[/yellow]: {len(country['museums'])} museums",
         )
 
     if not OUTPUT_ROOT_JSON.is_dir():
@@ -691,7 +704,7 @@ for country in country_indexes:
         # what kinds of vehicles are exhibited
         if museum["display"]:
             display_item_list_formatted = "\n".join(
-                list(map(lambda di: f"- {di}", museum["display"]))
+                list(map(lambda di: f"- {di}", museum["display"])),
             )
             display_section_formatted = f"Display:\n{display_item_list_formatted}"
             gpx_wps.description = (
@@ -720,7 +733,7 @@ for country in country_indexes:
                 # that has two coordinates but only one address
                 # https://automuseums.info/iran/abadan-gasoline-house-museum
                 address_item_list_formatted = "\n\n".join(
-                    list(map(lambda ai: f"{ai}", museum["address"]))
+                    list(map(lambda ai: f"{ai}", museum["address"])),
                 )
                 address_section_formatted = f"Address:\n{address_item_list_formatted}"
                 gpx_wps.description = (
@@ -731,7 +744,7 @@ for country in country_indexes:
         if museum["email"]:
             if len(museum["email"]) > 1:
                 email_item_list_formatted = "\n".join(
-                    list(map(lambda pi: f"{pi}", museum["email"]))
+                    list(map(lambda pi: f"{pi}", museum["email"])),
                 )
                 email_section_formatted = f"E-mail:\n{email_item_list_formatted}"
                 gpx_wps.description = (
@@ -748,7 +761,7 @@ for country in country_indexes:
         if museum["phone"]:
             if len(museum["phone"]) > 1:
                 phone_item_list_formatted = "\n".join(
-                    list(map(lambda pi: f"{pi}", museum["phone"]))
+                    list(map(lambda pi: f"{pi}", museum["phone"])),
                 )
                 phone_section_formatted = f"Phone:\n{phone_item_list_formatted}"
                 gpx_wps.description = (
@@ -774,7 +787,7 @@ for country in country_indexes:
         links = museum["links"].copy()
         links.append({"url": museum["absolute_url"], "title": "Automuseums.info"})
         links_section_plaintext = "\n".join(
-            list(map(lambda l: f"{l['title']}: {l['url']}", links))
+            list(map(lambda l: f"{l['title']}: {l['url']}", links)),
         )
         gpx_wps.description = f"{gpx_wps.description}\n\n{links_section_plaintext}"
 
@@ -796,7 +809,7 @@ for country in country_indexes:
         print(f"Generated [cyan]{output_file_name}[/cyan]")
     else:
         print(
-            f"Not generating [red]{output_file_name}[/red] due to {len(gpx.waypoints)} museums in [yellow]{country['country']['name']}[/yellow]"
+            f"Not generating [red]{output_file_name}[/red] due to {len(gpx.waypoints)} museums in [yellow]{country['country']['name']}[/yellow]",
         )
 
 # Regenerate GPX files grouped by region
@@ -834,7 +847,8 @@ if args.group:
     per_country_data = {
         k: v
         for (k, v) in zip(
-            required_countries, map(load_country_gpx_data, required_countries)
+            required_countries,
+            map(load_country_gpx_data, required_countries),
         )
     }
 
@@ -865,11 +879,13 @@ if args.group:
             print(f"Generated [magenta]{group_output_file_name}[/magenta]")
         else:
             print(
-                f"Not generating [red]{group_output_file_name}[/red] due to {len(gpx.waypoints)} museums in {group_name}"
+                f"Not generating [red]{group_output_file_name}[/red] due to {len(gpx.waypoints)} museums in {group_name}",
             )
 
 humanized_execution_duration = humanize.precisedelta(
-    datetime.datetime.now() - start_datetime, minimum_unit="seconds", format="%.0f"
+    datetime.datetime.now() - start_datetime,
+    minimum_unit="seconds",
+    format="%.0f",
 )
 print(f"Completed in {humanized_execution_duration}")
 
