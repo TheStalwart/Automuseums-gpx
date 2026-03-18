@@ -663,8 +663,9 @@ elif args.lowprofile:
     country_indexes.append(load_country_museum_list(selected_country))
 else:
     rprint("Updating all country indexes...")
-    for selected_country in country_list:
-        country_indexes.append(load_country_museum_list(selected_country))
+    country_indexes.extend(
+        load_country_museum_list(selected_country) for selected_country in country_list
+    )
 
 for country in country_indexes:
     rprint(
