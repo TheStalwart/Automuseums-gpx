@@ -1,14 +1,13 @@
 import argparse
 import datetime
-import glob
 import json
 import math
 import os
-import pathlib
 import sys
 import time
 from functools import reduce
 from itertools import chain
+from pathlib import Path
 from urllib.parse import quote
 
 import gpxpy
@@ -29,18 +28,18 @@ from urllib3.util.retry import Retry
 WEBSITE_ROOT_URL = "https://automuseums.info"
 
 # Define file paths
-PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
+PROJECT_ROOT = Path(__file__).parent.resolve()
 CONFIG_GROUP_FILENAME = "regions.yaml"
 
 # Define cache properties
-CACHE_ROOT = os.path.join(PROJECT_ROOT, "cache")
-CACHE_COUNTRY_ROOT = os.path.join(CACHE_ROOT, "countries")
+CACHE_ROOT = Path(PROJECT_ROOT) / "cache"
+CACHE_COUNTRY_ROOT = Path(CACHE_ROOT) / "countries"
 
 # Define output properties
-OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")
-OUTPUT_ROOT_PER_COUNTRY = os.path.join(OUTPUT_ROOT, "per-country")
-OUTPUT_ROOT_GROUPED = os.path.join(OUTPUT_ROOT, "grouped-by-region")
-OUTPUT_ROOT_JSON = os.path.join(OUTPUT_ROOT, "json")
+OUTPUT_ROOT = Path(PROJECT_ROOT) / "output"
+OUTPUT_ROOT_PER_COUNTRY = Path(OUTPUT_ROOT) / "per-country"
+OUTPUT_ROOT_GROUPED = Path(OUTPUT_ROOT) / "grouped-by-region"
+OUTPUT_ROOT_JSON = Path(OUTPUT_ROOT) / "json"
 OUTPUT_FILENAME_PREFIX = "Automuseums.info - "
 
 GPX_CREATOR = "https://github.com/TheStalwart/Automuseums-gpx"
@@ -58,14 +57,14 @@ def load_country_list():
         - cache_path (str): Path to a directory used to store cached pages for that country.
         - cache_timestamp (float): Modification timestamp of the cache file of the first page of museum list, or 0 if no cache file is present.
     """
-    cache_file_path = os.path.join(CACHE_ROOT, "homepage.html")
+    cache_file_path = Path(CACHE_ROOT) / "homepage.html"
 
     def download_homepage():
         print("Downloading country list...")
         r = requests.get(f"{WEBSITE_ROOT_URL}/homepage")
         homepage_contents = r.text
 
-        with open(cache_file_path, "w", encoding="utf-8") as f:
+        with cache_file_path.open("w", encoding="utf-8") as f:
             f.write(homepage_contents)
 
         if args.request_delay > 0:
@@ -74,10 +73,10 @@ def load_country_list():
         return homepage_contents
 
     html_contents = ""
-    if not os.path.isfile(cache_file_path):
+    if not cache_file_path.is_file():
         html_contents = download_homepage()
     else:
-        cache_file_modification_timestamp = os.path.getmtime(cache_file_path)
+        cache_file_modification_timestamp = cache_file_path.stat().st_mtime
         current_timestamp = time.time()
         cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
         cache_file_age_minutes = math.floor(cache_file_age_seconds / 60)
@@ -87,7 +86,7 @@ def load_country_list():
 
         if cache_file_age_minutes < args.cache_ttl_countrylist:
             print("Loading cached country list...")
-            with open(cache_file_path, "r", encoding="utf-8") as f:
+            with cache_file_path.open("r", encoding="utf-8") as f:
                 html_contents = f.read()
         else:
             html_contents = download_homepage()
@@ -107,11 +106,11 @@ def load_country_list():
         if "&Herze" in relative_url:
             relative_url = quote(relative_url)
 
-        cache_path = os.path.join(CACHE_COUNTRY_ROOT, name)
-        cache_file_path = os.path.join(cache_path, "00.html")
+        cache_path = Path(CACHE_COUNTRY_ROOT) / name
+        cache_file_path = Path(cache_path) / "00.html"
         cache_timestamp = 0  # countries with missing cache will keep 0 and be first in queue to update in lowprofile mode
-        if os.path.isfile(cache_file_path):
-            cache_timestamp = os.path.getmtime(cache_file_path)
+        if cache_file_path.is_file():
+            cache_timestamp = cache_file_path.stat().st_mtime
 
         return {
             "name": name,
@@ -146,8 +145,8 @@ def load_country_museum_list(selected_country):
             - 'relative_url' (str)
             - 'absolute_url' (str)
     """
-    if not os.path.isdir(selected_country["cache_path"]):
-        os.mkdir(selected_country["cache_path"])
+    if not selected_country["cache_path"].is_dir():
+        selected_country["cache_path"].mkdir()
 
     def format_return_value(museum_list):
         """
@@ -198,10 +197,10 @@ def load_country_museum_list(selected_country):
 
         # Delete old cache
         for old_cache_file in sorted(
-            glob.glob(os.path.join(selected_country["cache_path"], "[0-9]*.html"))
+            Path(selected_country["cache_path"]).glob("[0-9]*.html")
         ):
             print(f"Deleting old cache file: {old_cache_file}")
-            os.remove(old_cache_file)
+            old_cache_file.unlink()
 
         # Redownload country's index of museums
         museum_list_url = selected_country["absolute_url"]
@@ -209,14 +208,13 @@ def load_country_museum_list(selected_country):
             cached_file_name = f"{page_index}.html".rjust(
                 7, "0"
             )  # make all page numbers double-digits for easier sorting when loading cache
-            cached_page_path = os.path.join(
-                selected_country["cache_path"], cached_file_name
-            )
+            cached_page_path = Path(selected_country["cache_path"]) / cached_file_name
+
             r = requests.get(museum_list_url, params={"page": page_index})
             print(f"Downloaded {r.url}")
             html_contents = r.text
 
-            with open(cached_page_path, "w", encoding="utf-8") as f:
+            with cached_page_path.open("w", encoding="utf-8") as f:
                 f.write(html_contents)
 
             soup = BeautifulSoup(html_contents, "html.parser")
@@ -231,8 +229,8 @@ def load_country_museum_list(selected_country):
 
         return full_museum_list
 
-    cache_file_path = os.path.join(selected_country["cache_path"], "00.html")
-    if not os.path.isfile(cache_file_path):
+    cache_file_path = Path(selected_country["cache_path"]) / "00.html"
+    if not cache_file_path.is_file():
         return format_return_value(download_index())
     else:
         current_timestamp = time.time()
@@ -247,11 +245,11 @@ def load_country_museum_list(selected_country):
             full_museum_list = []
 
             sorted_cache_file_path_array = sorted(
-                glob.glob(os.path.join(selected_country["cache_path"], "[0-9]*.html"))
+                Path(selected_country["cache_path"]).glob("[0-9]*.html")
             )
             for cache_file_path in sorted_cache_file_path_array:
                 print(f"Loading cache from {cache_file_path}...")
-                with open(cache_file_path, "r", encoding="utf-8") as f:
+                with cache_file_path.open("r", encoding="utf-8") as f:
                     html_contents = f.read()
                     soup = BeautifulSoup(html_contents, "html.parser")
                     full_museum_list.extend(parse_museum_list_page(soup))
@@ -262,9 +260,9 @@ def load_country_museum_list(selected_country):
 
 
 def load_museum_page(country, museums, museum_properties):
-    cache_museum_root_path = os.path.join(country["cache_path"], "museums")
-    if not os.path.isdir(cache_museum_root_path):
-        os.mkdir(cache_museum_root_path)
+    cache_museum_root_path = Path(country["cache_path"]) / "museums"
+    if not cache_museum_root_path.is_dir():
+        cache_museum_root_path.mkdir()
 
     # Museum page URLs encountered during debugging:
     # https://automuseums.info/czechia/automoto-museum-lucany
@@ -288,9 +286,7 @@ def load_museum_page(country, museums, museum_properties):
     sanitized_file_basename = "".join(
         [x if x.isalnum() else "_" for x in name_slug]
     )  # sanitize https://stackoverflow.com/a/295152
-    cache_file_path = os.path.join(
-        cache_museum_root_path, f"{sanitized_file_basename}.html"
-    )
+    cache_file_path = Path(cache_museum_root_path) / f"{sanitized_file_basename}.html"
 
     def download_page():
         r = requests.get(f"{WEBSITE_ROOT_URL}{museum_properties['relative_url']}")
@@ -299,7 +295,7 @@ def load_museum_page(country, museums, museum_properties):
         )
         page_contents = r.text
 
-        with open(cache_file_path, "w", encoding="utf-8") as f:
+        with cache_file_path.open("w", encoding="utf-8") as f:
             f.write(page_contents)
 
         if args.request_delay > 0:
@@ -307,10 +303,10 @@ def load_museum_page(country, museums, museum_properties):
 
         return BeautifulSoup(page_contents, "html.parser")
 
-    if not os.path.isfile(cache_file_path):
+    if not cache_file_path.is_file():
         return download_page(), cache_file_path
     else:
-        cache_file_modification_timestamp = os.path.getmtime(cache_file_path)
+        cache_file_modification_timestamp = cache_file_path.stat().st_mtime
         current_timestamp = time.time()
         cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
@@ -319,7 +315,7 @@ def load_museum_page(country, museums, museum_properties):
             print(
                 f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old cached museum page for [yellow]{museum_properties['name']}[/yellow]..."
             )
-            with open(cache_file_path, "r", encoding="utf-8") as f:
+            with cache_file_path.open("r", encoding="utf-8") as f:
                 html_contents = f.read()
                 return BeautifulSoup(html_contents, "html.parser"), cache_file_path
         else:
@@ -481,8 +477,9 @@ def parse_museum_page(page, museum_properties):
 
 # Init Sentry before doing anything that might raise exception
 try:
+    dsn_file_path = Path(PROJECT_ROOT) / "sentry.dsn"
     sentry_sdk.init(
-        dsn=pathlib.Path(os.path.join(PROJECT_ROOT, "sentry.dsn")).read_text(),
+        dsn=dsn_file_path.read_text(),
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
@@ -493,9 +490,8 @@ except:
 # Attempt to load Better Stack heartbeat token
 betterstack_heartbeat_url = None
 try:
-    betterstack_heartbeat_url = (
-        pathlib.Path(os.path.join(PROJECT_ROOT, "heartbeat.url")).read_text().strip()
-    )
+    heartbeat_file_path = Path(PROJECT_ROOT) / "heartbeat.url"
+    betterstack_heartbeat_url = heartbeat_file_path.read_text().strip()
 except:
     pass
 
@@ -513,10 +509,10 @@ def report_failure_and_exit():
 start_datetime = datetime.datetime.now()
 
 # Ensure cache folders exist
-if not os.path.isdir(CACHE_ROOT):
-    os.mkdir(CACHE_ROOT)
-if not os.path.isdir(CACHE_COUNTRY_ROOT):
-    os.mkdir(CACHE_COUNTRY_ROOT)
+if not CACHE_ROOT.is_dir():
+    CACHE_ROOT.mkdir()
+if not CACHE_COUNTRY_ROOT.is_dir():
+    CACHE_COUNTRY_ROOT.mkdir()
 
 # Build ArgumentParser https://docs.python.org/3/library/argparse.html
 arg_parser = argparse.ArgumentParser()
@@ -574,26 +570,23 @@ requests.mount("https://", http_adapter)
 
 # Make sure we don't run more than one instance
 # on the same set of cache/output folders
-lock_file_path = os.path.join(PROJECT_ROOT, "cli.lock")
-if os.path.isfile(lock_file_path):
+lock_file_path = Path(PROJECT_ROOT) / "cli.lock"
+if lock_file_path.is_file():
     # if script is launched in lowprofile mode,
     # but lockfile is older than 24h -
     # assume previous execution has failed,
     # e.g. due to host machine power failure,
     # recreate the lock and carry on
-    if (
-        args.lowprofile
-        and os.path.getmtime(lock_file_path) < time.time() - 60 * 60 * 24
-    ):
+    if args.lowprofile and lock_file_path.stat().st_mtime < time.time() - 60 * 60 * 24:
         print("[red]Deleting stale lock file[/red]")
-        os.remove(lock_file_path)
+        lock_file_path.unlink()
     else:
         if sys.gettrace():  # https://stackoverflow.com/a/72977762/5337349
             print("[red]Lock file ignored due to debugging[/red]")
         else:
             print("[red]Another instance of the script is running, exiting[/red]")
             report_failure_and_exit()
-open(lock_file_path, "w").close()
+lock_file_path.open("w").close()
 
 # Check-in with Sentry cron monitoring
 sentry_lowprofile_slug = "lowprofile"
@@ -619,7 +612,7 @@ if args.country:
     if len(country_search_results) < 1:
         # technically, a clean exit
         # even though no useful work has been done
-        os.remove(lock_file_path)
+        lock_file_path.unlink()
 
         readable_country_list = ", ".join(
             map(lambda country: country["name"], country_list)
@@ -655,11 +648,11 @@ for country in country_indexes:
             f"Parsed [yellow]{country['country']['name']}[/yellow]: {len(country['museums'])} museums"
         )
 
-    if not os.path.isdir(OUTPUT_ROOT_JSON):
-        os.mkdir(OUTPUT_ROOT_JSON)
+    if not OUTPUT_ROOT_JSON.is_dir():
+        OUTPUT_ROOT_JSON.mkdir()
     json_output_file_name = f"{country['country']['name']}.json"
-    json_output_file_path = os.path.join(OUTPUT_ROOT_JSON, json_output_file_name)
-    with open(json_output_file_path, "w", encoding="utf-8") as json_output_file:
+    json_output_file_path = Path(OUTPUT_ROOT_JSON) / json_output_file_name
+    with json_output_file_path.open("w", encoding="utf-8") as json_output_file:
         json.dump(country, json_output_file, indent=2)
 
 if args.verbose:
@@ -790,14 +783,14 @@ for country in country_indexes:
         for location_index in range(len(museum["coordinates"])):
             gpx.waypoints.append(create_gpx_waypoint(museum, location_index))
 
-    if not os.path.isdir(OUTPUT_ROOT_PER_COUNTRY):
-        os.mkdir(OUTPUT_ROOT_PER_COUNTRY)
+    if not OUTPUT_ROOT_PER_COUNTRY.is_dir():
+        OUTPUT_ROOT_PER_COUNTRY.mkdir()
 
     output_file_name = f"{OUTPUT_FILENAME_PREFIX}{country['country']['name']}.gpx"
-    output_file_path = os.path.join(OUTPUT_ROOT_PER_COUNTRY, output_file_name)
+    output_file_path = Path(OUTPUT_ROOT_PER_COUNTRY) / output_file_name
 
     if len(gpx.waypoints) > 0:
-        with open(output_file_path, "w", encoding="utf-8") as f:
+        with output_file_path.open("w", encoding="utf-8") as f:
             f.write(gpx.to_xml())
         print(f"Generated [cyan]{output_file_name}[/cyan]")
     else:
@@ -811,7 +804,8 @@ if args.group:
 
     # Load country groups from YAML config file
     # https://stackoverflow.com/a/1774043/5337349
-    with open(os.path.join(PROJECT_ROOT, CONFIG_GROUP_FILENAME)) as stream:
+    group_config_file_path = Path(PROJECT_ROOT) / CONFIG_GROUP_FILENAME
+    with group_config_file_path.open() as stream:
         try:
             groups = yaml.safe_load(stream)
             # print(f"Loaded {CONFIG_GROUP_FILENAME}:")
@@ -827,13 +821,13 @@ if args.group:
 
     def load_country_gpx_data(country_name):
         country_file_name = f"{OUTPUT_FILENAME_PREFIX}{country_name}.gpx"
-        file_path = os.path.join(OUTPUT_ROOT_PER_COUNTRY, country_file_name)
+        file_path = Path(OUTPUT_ROOT_PER_COUNTRY) / country_file_name
 
-        if not os.path.isfile(file_path):
+        if not file_path.is_file():
             print(f"Warning: missing [red]{country_file_name}[/red]")
             return None
 
-        with open(file_path, "r", encoding="utf-8") as gpx_file:
+        with file_path.open("r", encoding="utf-8") as gpx_file:
             return gpxpy.parse(gpx_file)
 
     per_country_data = {
@@ -843,15 +837,13 @@ if args.group:
         )
     }
 
-    if not os.path.isdir(OUTPUT_ROOT_GROUPED):
-        os.mkdir(OUTPUT_ROOT_GROUPED)
+    if not OUTPUT_ROOT_GROUPED.is_dir():
+        OUTPUT_ROOT_GROUPED.mkdir()
 
     # Generate GPX files grouped by region
     for group_name, group_countries in groups.items():
         group_output_file_name = f"{OUTPUT_FILENAME_PREFIX}{group_name}.gpx"
-        group_output_file_path = os.path.join(
-            OUTPUT_ROOT_GROUPED, group_output_file_name
-        )
+        group_output_file_path = Path(OUTPUT_ROOT_GROUPED) / group_output_file_name
 
         gpx = gpxpy.gpx.GPX()
         gpx.creator = GPX_CREATOR
@@ -867,7 +859,7 @@ if args.group:
                 gpx.waypoints.extend(per_country_data[country_name].waypoints)
 
         if len(gpx.waypoints) > 0:
-            with open(group_output_file_path, "w", encoding="utf-8") as f:
+            with group_output_file_path.open("w", encoding="utf-8") as f:
                 f.write(gpx.to_xml())
             print(f"Generated [magenta]{group_output_file_name}[/magenta]")
         else:
@@ -881,7 +873,7 @@ humanized_execution_duration = humanize.precisedelta(
 print(f"Completed in {humanized_execution_duration}")
 
 # Clean exit
-os.remove(lock_file_path)
+lock_file_path.unlink()
 
 if args.lowprofile:
     capture_checkin(
