@@ -581,7 +581,9 @@ if lock_file_path.is_file():
         print("[red]Deleting stale lock file[/red]")
         lock_file_path.unlink()
     else:
-        if sys.gettrace():  # https://stackoverflow.com/a/72977762/5337349
+        if (
+            sys.gettrace() or "debugpy" in sys.modules
+        ):  # https://stackoverflow.com/a/72977762/5337349
             print("[red]Lock file ignored due to debugging[/red]")
         else:
             print("[red]Another instance of the script is running, exiting[/red]")
