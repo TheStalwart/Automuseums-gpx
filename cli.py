@@ -46,15 +46,22 @@ GPX_CREATOR = "https://github.com/TheStalwart/Automuseums-gpx"
 
 def load_country_list():
     """
-    Load and parse the Automuseums.info homepage to build a list of countries and their cache metadata.
+    Load and parse the Automuseums.info homepage
+    to build a list of countries and their cache metadata.
 
     Returns:
-      List[dict]: A list of country metadata dictionaries with keys:
+        List[dict]: A list of country metadata dictionaries with keys:
+
         - name (str): Country display name.
-        - relative_url (str): relative URL to the first page of museum list of the country.
-        - absolute_url (str): absolute URL to the first page of museum list of the country.
-        - cache_path (str): Path to a directory used to store cached pages for that country.
-        - cache_timestamp (float): Modification timestamp of the cache file of the first page of museum list, or 0 if no cache file is present.
+        - relative_url (str): Relative URL to the first page
+          of the country's museum list.
+        - absolute_url (str): Absolute URL to the first page
+          of the country's museum list.
+        - cache_path (str): Path to a directory
+          used to store cached pages for that country.
+        - cache_timestamp (float): Modification timestamp
+          of the cache file for the first page of the museum list,
+          or 0 if no cache file is present.
     """
     cache_file_path = Path(CACHE_ROOT) / "homepage.html"
 
@@ -80,7 +87,8 @@ def load_country_list():
         cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
         cache_file_age_minutes = math.floor(cache_file_age_seconds / 60)
         print(
-            f"Country cache file is {cache_file_age_minutes}/{args.cache_ttl_countrylist} minutes old",
+            "Country cache file is"
+            f" {cache_file_age_minutes}/{args.cache_ttl_countrylist} minutes old",
         )
 
         if cache_file_age_minutes < args.cache_ttl_countrylist:
@@ -100,14 +108,20 @@ def load_country_list():
         name = a_tag.contents[0].strip()
 
         relative_url = a_tag["href"]
-        # A link to Bosnia on the main page contains invalid (non-urlencoded) href value.
-        # It's one specific invalid value, all other country links e.g. "New Zealand" are urlencoded.
+        # A link to Bosnia on the main page
+        # contains invalid (non-urlencoded) href value.
+        # It's one specific invalid value,
+        # all other country links e.g. "New Zealand" are urlencoded.
         if "&Herze" in relative_url:
             relative_url = quote(relative_url)
 
         cache_path = Path(CACHE_COUNTRY_ROOT) / name
         cache_file_path = Path(cache_path) / "00.html"
-        cache_timestamp = 0  # countries with missing cache will keep 0 and be first in queue to update in lowprofile mode
+
+        # countries with missing cache will keep 0
+        # and be first in queue to update in lowprofile mode
+        cache_timestamp = 0
+
         if cache_file_path.is_file():
             cache_timestamp = cache_file_path.stat().st_mtime
 
@@ -126,18 +140,20 @@ def load_country_list():
 
 def load_country_museum_list(selected_country):
     """
-    Load and parse all museum list pages for a given country and return array of links to museum pages.
+    Load and parse all museum list pages for a given country
+    and return array of links to museum pages.
 
     Args:
-      selected_country (dict): Country metadata dictionary returned by load_country_list(), with keys:
-          - name (str)
-          - relative_url (str)
-          - absolute_url (str)
-          - cache_path (str)
-          - cache_timestamp (float)
+        selected_country (dict): Country metadata dictionary \
+        returned by load_country_list(), with keys:
+            - name (str)
+            - relative_url (str)
+            - absolute_url (str)
+            - cache_path (str)
+            - cache_timestamp (float)
 
     Returns:
-      dict: A dictionary with keys:
+        dict: A dictionary with keys:
         - 'country' (dict): The original selected_country argument.
         - 'museums' (List[dict]): A list of museum metadata dictionaries, each having:
             - 'name' (str)
@@ -177,7 +193,8 @@ def load_country_museum_list(selected_country):
 
     def parse_museum_list_page(soup):
         """
-        Read museum list html parsed with BeautifulSoup and return names and URLs of found museums
+        Read museum list html parsed with BeautifulSoup
+        and return names and URLs of found museums
         """
         museum_blocks = soup.find_all(class_="node-readmore")
 
@@ -206,10 +223,13 @@ def load_country_museum_list(selected_country):
         # Redownload country's index of museums
         museum_list_url = selected_country["absolute_url"]
         for page_index in range(100):  # make sure we never get stuck in infinite loop
+            # make all page numbers are double-digits
+            # for easier sorting when loading cache
             cached_file_name = f"{page_index}.html".rjust(
                 7,
                 "0",
-            )  # make all page numbers double-digits for easier sorting when loading cache
+            )
+
             cached_page_path = Path(selected_country["cache_path"]) / cached_file_name
 
             r = requests.get(museum_list_url, params={"page": page_index})
@@ -239,7 +259,8 @@ def load_country_museum_list(selected_country):
         cache_file_age_seconds = current_timestamp - selected_country["cache_timestamp"]
         cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
         print(
-            f"[yellow]{selected_country['name']}[/yellow] index cache is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old",
+            f"[yellow]{selected_country['name']}[/yellow] index cache"
+            f" is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old",
         )
 
         if cache_file_age_hours < args.cache_ttl_museumlist:
@@ -274,7 +295,8 @@ def load_museum_page(country, museums, museum_properties):
 
     # Also, some entries are listed multiple times on country index page,
     # e.g. https://automuseums.info/czech-republic/museum-historical-motorcycles
-    # is listed 3x times on https://automuseums.info/museums/Czechia?page=4 as of Aug 11th 2024,
+    # is listed 3x times on https://automuseums.info/museums/Czechia?page=4
+    # as of Aug 11th 2024,
     # all 3x entries have the same page link, but that page lists 3x locations.
     # This needs to be exported as 3x different placemarks in GPX file.
 
@@ -315,7 +337,9 @@ def load_museum_page(country, museums, museum_properties):
 
         if cache_file_age_hours < args.cache_ttl_museumpage:
             print(
-                f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old cached museum page for [yellow]{museum_properties['name']}[/yellow]...",
+                f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old"
+                " cached museum page"
+                f" for [yellow]{museum_properties['name']}[/yellow]...",
             )
             with cache_file_path.open("r", encoding="utf-8") as f:
                 html_contents = f.read()
@@ -342,8 +366,12 @@ def parse_museum_page(page, museum_properties):
     body_div = content_div.find(class_="field--name-body")
     if body_div:
         # for some museums, description is wrapped in extra <p> tag
-        # https://automuseums.info/denmark/egeskov-castle - has multiple <p> tags
-        # https://automuseums.info/jordan/royal-automobile-museum - field--name-body value is enclosed in double-quotes
+        #
+        # https://automuseums.info/denmark/egeskov-castle
+        #       has multiple <p> tags
+        #
+        # https://automuseums.info/jordan/royal-automobile-museum
+        #       field--name-body value is enclosed in double-quotes
 
         # Most popular apps with GPX import feature do not support HTML tags,
         # so do a simple conversion to plain text
@@ -486,7 +514,7 @@ try:
         # of transactions for tracing.
         traces_sample_rate=1.0,
     )
-except:
+except sentry_sdk.utils.BadDsn:
     pass
 
 # Attempt to load Better Stack heartbeat token
@@ -494,7 +522,7 @@ betterstack_heartbeat_url = None
 try:
     heartbeat_file_path = Path(PROJECT_ROOT) / "heartbeat.url"
     betterstack_heartbeat_url = heartbeat_file_path.read_text().strip()
-except:
+except OSError:
     pass
 
 
@@ -609,7 +637,8 @@ if args.lowprofile:
         status=MonitorStatus.IN_PROGRESS,
     )
 
-    # Calls to stop_profiler are optional - if you don't stop the profiler, it will keep profiling
+    # Calls to stop_profiler are optional,
+    # If you don't stop the profiler, it will keep profiling
     # your application until the process exits or stop_profiler is called.
     sentry_sdk.profiler.start_profiler()
 
@@ -630,7 +659,8 @@ if args.country:
             map(lambda country: country["name"], country_list),
         )
         sys.exit(
-            f'Country "{args.country}" not found.\n\nTry any of these: {readable_country_list}',
+            f'Country "{args.country}" not found.\n\n'
+            f"Try any of these: {readable_country_list}",
         )
 
     selected_country = country_search_results[0]
@@ -647,7 +677,8 @@ else:
 
 for country in country_indexes:
     print(
-        f"Loading {len(country['museums'])} museums of [yellow]{country['country']['name']}[/yellow]...",
+        f"Loading {len(country['museums'])} museums"
+        f" of [yellow]{country['country']['name']}[/yellow]...",
     )
     for museum_properties in country["museums"]:
         page, cache_file_path = load_museum_page(
@@ -659,7 +690,8 @@ for country in country_indexes:
         museum_properties.update(parse_museum_page(page, museum_properties))
     if not args.verbose:
         print(
-            f"Parsed [yellow]{country['country']['name']}[/yellow]: {len(country['museums'])} museums",
+            f"Parsed [yellow]{country['country']['name']}[/yellow]:"
+            f" {len(country['museums'])} museums",
         )
 
     if not OUTPUT_ROOT_JSON.is_dir():
@@ -696,7 +728,8 @@ for country in country_indexes:
 
         gpx_wps.description = museum["description"]
 
-        # Prepend description with museum's original name in native language, if available
+        # Prepend description with museum's original name in native language,
+        # if available
         if museum["original_name"]:
             gpx_wps.description = f"{museum['original_name']}\n\n{gpx_wps.description}"
 
@@ -809,7 +842,9 @@ for country in country_indexes:
         print(f"Generated [cyan]{output_file_name}[/cyan]")
     else:
         print(
-            f"Not generating [red]{output_file_name}[/red] due to {len(gpx.waypoints)} museums in [yellow]{country['country']['name']}[/yellow]",
+            f"Not generating [red]{output_file_name}[/red]"
+            f" due to {len(gpx.waypoints)} museums"
+            f" in [yellow]{country['country']['name']}[/yellow]",
         )
 
 # Regenerate GPX files grouped by region
@@ -830,7 +865,8 @@ if args.group:
     # Extend groups definition with "All Countries"
     groups["All countries"] = list(map(lambda c: c["name"], country_list))
 
-    # Load all generated per-country GPX files we need for groups defined in YAML config file
+    # Load all generated per-country GPX files we need
+    # for groups defined in YAML config file
     required_countries = list(set(chain.from_iterable(groups.values())))
 
     def load_country_gpx_data(country_name):
@@ -879,7 +915,8 @@ if args.group:
             print(f"Generated [magenta]{group_output_file_name}[/magenta]")
         else:
             print(
-                f"Not generating [red]{group_output_file_name}[/red] due to {len(gpx.waypoints)} museums in {group_name}",
+                f"Not generating [red]{group_output_file_name}[/red]"
+                f" due to {len(gpx.waypoints)} museums in {group_name}",
             )
 
 humanized_execution_duration = humanize.precisedelta(
