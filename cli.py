@@ -2,12 +2,12 @@ import argparse
 import datetime
 import json
 import math
+import re
 import sys
 import time
 from functools import reduce
 from itertools import chain
 from pathlib import Path
-from urllib.parse import quote
 
 import gpxpy
 import gpxpy.gpx
@@ -67,7 +67,7 @@ def load_country_list():
 
     def download_homepage():
         rprint("Downloading country list...")
-        r = requests.get(f"{WEBSITE_ROOT_URL}/homepage")
+        r = requests.get(f"{WEBSITE_ROOT_URL}")
         homepage_contents = r.text
 
         with cache_file_path.open("w", encoding="utf-8") as f:
@@ -100,20 +100,15 @@ def load_country_list():
 
     # Parse homepage HTML
     soup = BeautifulSoup(html_contents, "html.parser")
-    countries = soup.find(id="block-searchmuseumsin").find_all(
-        "a",
+    countries = soup.find(id="filter-country").find_all(
+        "option",
+        value=re.compile(r".+"),
     )  # https://beautiful-soup-4.readthedocs.io/en/latest/#navigating-the-tree
 
     def define_country_properties(a_tag):
-        name = a_tag.contents[0].strip()
+        name = a_tag["value"].strip()
 
-        relative_url = a_tag["href"]
-        # A link to Bosnia on the main page
-        # contains invalid (non-urlencoded) href value.
-        # It's one specific invalid value,
-        # all other country links e.g. "New Zealand" are urlencoded.
-        if "&Herze" in relative_url:
-            relative_url = quote(relative_url)
+        relative_url = f"/museums/?country={name}"
 
         cache_path = Path(CACHE_COUNTRY_ROOT) / name
         cache_file_path = Path(cache_path) / "00.html"
