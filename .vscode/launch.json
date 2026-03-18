@@ -49,6 +49,20 @@
       ]
     },
     {
+      "name": "Python Debugger: Switzerland only",
+      // contains a multi-location "Saurer Museum and Depot"
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--verbose",
+        "--country",
+        "switzerland"
+      ]
+    },
+    {
       "name": "Python Debugger: CZ only",
       // contains a multi-location "Museum of Historical Motorcycles"
       "type": "debugpy",
