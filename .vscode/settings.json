@@ -1,6 +1,16 @@
 {
   "files.trimTrailingWhitespace": true,
   "files.eol": "\n",
+  "ruff.enable": true,
+  "ruff.lint.select": [
+    "ALL"
+  ],
+  "ruff.lint.ignore": [
+    "ANN", // type annotations
+    "D", // docstrings
+    "TD", // TODO
+    "FIX" // TODO
+  ],
   "[jsonc]": {
     "editor.formatOnSave": true,
     "editor.tabSize": 2,
@@ -10,5 +20,12 @@
     // the values you've explicitly set, above.
     // https://stackoverflow.com/a/29972553
     "editor.detectIndentation": false
-  }
+  },
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
 }
