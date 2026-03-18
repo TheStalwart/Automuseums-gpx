@@ -133,9 +133,7 @@ def load_country_list():
             "cache_timestamp": cache_timestamp,
         }
 
-    property_list = list(map(define_country_properties, countries))
-
-    return property_list
+    return list(map(define_country_properties, countries))
 
 
 def load_country_museum_list(selected_country):
@@ -245,7 +243,8 @@ def load_country_museum_list(selected_country):
             if not soup.find(title="Go to next page"):
                 rprint("Link to next page not found, bailing out")
                 break
-            elif args.request_delay > 0:
+
+            if args.request_delay > 0:
                 time.sleep(args.request_delay)
 
         return full_museum_list
@@ -253,32 +252,32 @@ def load_country_museum_list(selected_country):
     cache_file_path = Path(selected_country["cache_path"]) / "00.html"
     if not cache_file_path.is_file():
         return format_return_value(download_index())
-    else:
-        current_timestamp = time.time()
-        cache_file_age_seconds = current_timestamp - selected_country["cache_timestamp"]
-        cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
-        rprint(
-            f"[yellow]{selected_country['name']}[/yellow] index cache"
-            f" is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old",
+
+    current_timestamp = time.time()
+    cache_file_age_seconds = current_timestamp - selected_country["cache_timestamp"]
+    cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
+    rprint(
+        f"[yellow]{selected_country['name']}[/yellow] index cache"
+        f" is {cache_file_age_hours}/{args.cache_ttl_museumlist} hours old",
+    )
+
+    if cache_file_age_hours < args.cache_ttl_museumlist:
+        rprint("Loading cached index...")
+        full_museum_list = []
+
+        sorted_cache_file_path_array = sorted(
+            Path(selected_country["cache_path"]).glob("[0-9]*.html"),
         )
+        for cache_file_path in sorted_cache_file_path_array:
+            rprint(f"Loading cache from {cache_file_path}...")
+            with cache_file_path.open("r", encoding="utf-8") as f:
+                html_contents = f.read()
+                soup = BeautifulSoup(html_contents, "html.parser")
+                full_museum_list.extend(parse_museum_list_page(soup))
 
-        if cache_file_age_hours < args.cache_ttl_museumlist:
-            rprint("Loading cached index...")
-            full_museum_list = []
+        return format_return_value(full_museum_list)
 
-            sorted_cache_file_path_array = sorted(
-                Path(selected_country["cache_path"]).glob("[0-9]*.html"),
-            )
-            for cache_file_path in sorted_cache_file_path_array:
-                rprint(f"Loading cache from {cache_file_path}...")
-                with cache_file_path.open("r", encoding="utf-8") as f:
-                    html_contents = f.read()
-                    soup = BeautifulSoup(html_contents, "html.parser")
-                    full_museum_list.extend(parse_museum_list_page(soup))
-
-            return format_return_value(full_museum_list)
-        else:
-            return format_return_value(download_index())
+    return format_return_value(download_index())
 
 
 def load_museum_page(country, museums, museum_properties):
@@ -328,23 +327,23 @@ def load_museum_page(country, museums, museum_properties):
 
     if not cache_file_path.is_file():
         return download_page(), cache_file_path
-    else:
-        cache_file_modification_timestamp = cache_file_path.stat().st_mtime
-        current_timestamp = time.time()
-        cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
-        cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
 
-        if cache_file_age_hours < args.cache_ttl_museumpage:
-            rprint(
-                f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old"
-                " cached museum page"
-                f" for [yellow]{museum_properties['name']}[/yellow]...",
-            )
-            with cache_file_path.open("r", encoding="utf-8") as f:
-                html_contents = f.read()
-                return BeautifulSoup(html_contents, "html.parser"), cache_file_path
-        else:
-            return download_page(), cache_file_path
+    cache_file_modification_timestamp = cache_file_path.stat().st_mtime
+    current_timestamp = time.time()
+    cache_file_age_seconds = current_timestamp - cache_file_modification_timestamp
+    cache_file_age_hours = math.floor(cache_file_age_seconds / 60 / 60)
+
+    if cache_file_age_hours < args.cache_ttl_museumpage:
+        rprint(
+            f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old"
+            " cached museum page"
+            f" for [yellow]{museum_properties['name']}[/yellow]...",
+        )
+        with cache_file_path.open("r", encoding="utf-8") as f:
+            html_contents = f.read()
+            return BeautifulSoup(html_contents, "html.parser"), cache_file_path
+    else:
+        return download_page(), cache_file_path
 
 
 def parse_museum_page(page, museum_properties):
@@ -882,6 +881,7 @@ if args.group:
         for (k, v) in zip(
             required_countries,
             map(load_country_gpx_data, required_countries),
+            strict=True,
         )
     }
 
