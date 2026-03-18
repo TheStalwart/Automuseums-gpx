@@ -2,7 +2,6 @@ import argparse
 import datetime
 import json
 import math
-import os
 import sys
 import time
 from functools import reduce
@@ -221,7 +220,7 @@ def load_country_museum_list(selected_country):
             full_museum_list.extend(parse_museum_list_page(soup))
 
             if not soup.find(title="Go to next page"):
-                print(f"Link to next page not found, bailing out")
+                print("Link to next page not found, bailing out")
                 break
             else:
                 if args.request_delay > 0:
@@ -501,7 +500,7 @@ def report_failure_and_exit():
         print(f"Reporting heartbeat to {betterstack_heartbeat_url}/fail")
         response = requests.get(f"{betterstack_heartbeat_url}/fail")
         if not response.ok:
-            print(f"Failed!")
+            print("Failed!")
         print(f"Response: [{response.status_code}]")
     sys.exit(1)
 
@@ -810,8 +809,8 @@ if args.group:
     with group_config_file_path.open() as stream:
         try:
             groups = yaml.safe_load(stream)
-            # print(f"Loaded {CONFIG_GROUP_FILENAME}:")
-            # pprint(groups)
+            print(f"Loaded {CONFIG_GROUP_FILENAME}:")
+            pprint(groups)
         except yaml.YAMLError as exc:
             print(exc)
 
@@ -889,5 +888,5 @@ if args.lowprofile:
         print(f"Reporting heartbeat to {betterstack_heartbeat_url}")
         response = requests.get(betterstack_heartbeat_url)
         if not response.ok:
-            print(f"Failed!")
+            print("Failed!")
         print(f"Response: [{response.status_code}]")
