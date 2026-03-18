@@ -45,7 +45,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "United States"
+        "united-states"
       ]
     },
     {
@@ -59,7 +59,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "Czechia"
+        "czech-republic"
       ]
     },
     {
@@ -73,7 +73,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "Denmark"
+        "denmark"
       ]
     },
     {
@@ -86,7 +86,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "Estonia"
+        "estonia"
       ]
     },
     {
@@ -100,7 +100,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "Jordan"
+        "jordan"
       ]
     },
     {
@@ -114,7 +114,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "Germany"
+        "germany"
       ]
     },
     {
@@ -128,7 +128,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "Lithuania"
+        "lithuania"
       ]
     },
     {
@@ -142,7 +142,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "Ghana"
+        "ghana"
       ]
     },
     {
@@ -156,7 +156,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "Bosnia"
+        "bosnia-and-herzegovina"
       ]
     },
     {
@@ -170,7 +170,7 @@
         "--omit-time",
         "--verbose",
         "--country",
-        "New Zealand"
+        "new-zealand"
       ]
     },
     {
