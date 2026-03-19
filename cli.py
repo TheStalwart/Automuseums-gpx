@@ -534,7 +534,7 @@ arg_parser.add_argument(
 arg_parser.add_argument(
     "--cache-ttl-museumpage",
     type=int,
-    default=48,
+    default=168,  # 7 days
     help="Override museum page cache time-to-live in hours (default: %(default)s)",
 )
 arg_parser.add_argument(
