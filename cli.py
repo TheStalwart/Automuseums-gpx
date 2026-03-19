@@ -282,33 +282,10 @@ def load_museum_page(country, museums, museum_properties):
     if not cache_museum_root_path.is_dir():
         cache_museum_root_path.mkdir()
 
-    # Museum page URLs encountered during debugging:
-    # https://automuseums.info/czechia/automoto-museum-lucany
-    # https://automuseums.info/czech-republic/museum-eastern-bloc-vehicles-%C5%BEelezn%C3%BD-brod
-    # https://automuseums.info/index.php/czechia/historic-car-museum-kuks
-    # https://automuseums.info/index.php/czech-republic/fire-brigade-museum-p%C5%99ibyslav
-
-    # Also, some entries are listed multiple times on country index page,
-    # e.g. https://automuseums.info/czech-republic/museum-historical-motorcycles
-    # is listed 3x times on https://automuseums.info/museums/Czechia?page=4
-    # as of Aug 11th 2024,
-    # all 3x entries have the same page link, but that page lists 3x locations.
-    # This needs to be exported as 3x different placemarks in GPX file.
-
-    # A few days after that code was written,
-    # i discovered every museum page has data-history-node-id,
-    # and museum pages can be loaded by /node/ID URLs, e.g. https://automuseums.info/node/1893
-
-    name_slug = museum_properties["relative_url"].split("/")[
-        -1
-    ]  # always use last slug because there could be "/index.php/" in the middle
-    sanitized_file_basename = "".join(
-        [x if x.isalnum() else "_" for x in name_slug],
-    )  # sanitize https://stackoverflow.com/a/295152
-    cache_file_path = Path(cache_museum_root_path) / f"{sanitized_file_basename}.html"
+    cache_file_path = Path(cache_museum_root_path) / f"{museum_properties['id']}.html"
 
     def download_page():
-        r = requests.get(f"{WEBSITE_ROOT_URL}{museum_properties['relative_url']}")
+        r = requests.get(museum_properties["permalink"])
         rprint(
             f"Downloaded {museums.index(museum_properties) + 1}/{len(museums)} {r.url}",
         )
@@ -334,7 +311,7 @@ def load_museum_page(country, museums, museum_properties):
         rprint(
             f"Loading {cache_file_age_hours}/{args.cache_ttl_museumpage} hours old"
             " cached museum page"
-            f" for [yellow]{museum_properties['name']}[/yellow]...",
+            f" for [yellow]{museum_properties['title']}[/yellow]...",
         )
         with cache_file_path.open("r", encoding="utf-8") as f:
             html_contents = f.read()
