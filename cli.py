@@ -234,7 +234,28 @@ def load_country_museum_list(selected_country):
             rprint(f"Downloaded {r.url}")
             json_contents = r.json()
 
-            full_museum_list.extend(json_contents["museums"])
+            museum_array = json_contents["museums"]
+
+            # As of March 2026, some museums have no geographic coordinates,
+            # e.g. https://automuseums.info/museum/beijing-classic-car-museum/
+            # and https://automuseums.info/museum/nemes-motor-museum/
+            # have empty strings for latitude and longitude in index
+            # and no "geo" key in page's JSON.
+            # These issues were reported to the website admin,
+            # but this failsafe filter should stay.
+            def has_geolocation(museum):
+                if not (len(museum["latitude"]) and len(museum["longitude"])):
+                    rprint(
+                        f"[red]Warning:[/red] {museum['title']} ({museum['id']})"
+                        " excluded for missing geolocation",
+                    )
+                    return False
+
+                return True
+
+            museums_with_geolocation = filter(has_geolocation, museum_array)
+
+            full_museum_list.extend(museums_with_geolocation)
 
             if json_contents["current_page"] == json_contents["pages"]:
                 rprint("Next page not found, bailing out")
