@@ -19,7 +19,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose"
       ]
     },
     {
@@ -30,7 +29,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--lowprofile"
       ]
     },
@@ -43,7 +41,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "united-states"
       ]
@@ -57,7 +54,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "switzerland"
       ]
@@ -71,7 +67,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "czech-republic"
       ]
@@ -85,7 +80,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "denmark"
       ]
@@ -98,7 +92,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "estonia"
       ]
@@ -112,7 +105,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "jordan"
       ]
@@ -126,7 +118,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "germany"
       ]
@@ -140,7 +131,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "lithuania"
       ]
@@ -154,7 +144,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "ghana"
       ]
@@ -168,7 +157,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "bosnia-and-herzegovina"
       ]
@@ -182,7 +170,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--country",
         "new-zealand"
       ]
@@ -196,7 +183,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--lowprofile",
         "--cache-ttl-countrylist",
         "9999",
@@ -218,7 +204,6 @@
       "console": "integratedTerminal",
       "args": [
         "--omit-time",
-        "--verbose",
         "--cache-ttl-countrylist",
         "9999",
         "--cache-ttl-museumlist",
