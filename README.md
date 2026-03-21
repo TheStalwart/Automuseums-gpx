@@ -50,7 +50,7 @@ create `heartbeat.url` file with heartbeat URL in the root of the project.
 
 ## Development environment
 
-- Python >=3.3
+- Python >=3.10
 
 ### venv-based
 
