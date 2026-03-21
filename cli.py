@@ -17,6 +17,7 @@ import yaml
 from bs4 import BeautifulSoup
 from requests import Session
 from requests.adapters import HTTPAdapter
+from requests_ratelimiter import LimiterSession
 from rich import print as rprint
 from rich.pretty import pprint
 from sentry_sdk.crons import capture_checkin
@@ -73,9 +74,6 @@ def load_country_list():
 
         with cache_file_path.open("w", encoding="utf-8") as f:
             f.write(homepage_contents)
-
-        if args.request_delay > 0:
-            time.sleep(args.request_delay)
 
         return homepage_contents
 
@@ -261,9 +259,6 @@ def load_country_museum_list(selected_country):
                 rprint("Next page not found, bailing out")
                 break
 
-            if args.request_delay > 0:
-                time.sleep(args.request_delay)
-
         with selected_country["cache_index_path"].open(
             "w",
             encoding="utf-8",
@@ -314,9 +309,6 @@ def load_museum_page(country, museums, museum_properties):
 
         with cache_file_path.open("w", encoding="utf-8") as f:
             f.write(page_contents)
-
-        if args.request_delay > 0:
-            time.sleep(args.request_delay)
 
         return BeautifulSoup(page_contents, "html.parser")
 
@@ -607,9 +599,10 @@ arg_parser.add_argument(
 args = arg_parser.parse_args()
 
 # Set up a customized instance of Requests library
+# with rate limiter and retry config
 # to avoid crashing on monthly DNS resolution failures
 # https://stackoverflow.com/questions/23013220/max-retries-exceeded-with-url-in-requests
-requests = Session()
+requests = LimiterSession(per_second=(60 / args.request_delay) / 60)
 request_retry_config = Retry(total=5, backoff_factor=args.request_delay)
 http_adapter = HTTPAdapter(max_retries=request_retry_config)
 requests.mount("http://", http_adapter)
