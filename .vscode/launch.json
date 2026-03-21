@@ -46,6 +46,33 @@
       ]
     },
     {
+      "name": "Python Debugger: Slovenia only",
+      // contains FIVA Certified Member
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--country",
+        "slovenia"
+      ]
+    },
+    {
+      "name": "Python Debugger: Japan only",
+      // contains museums with multiple links,
+      // e.g. https://automuseums.info/museum/ikaho-toy-doll-and-car-museum/
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--country",
+        "japan"
+      ]
+    },
+    {
       "name": "Python Debugger: Switzerland only",
       // contains a multi-location "Saurer Museum and Depot"
       "type": "debugpy",
