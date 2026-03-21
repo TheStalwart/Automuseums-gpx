@@ -835,9 +835,9 @@ for country in country_indexes:
         links = museum["links"].copy()
         links.append({"url": museum["permalink"], "title": "Automuseums.info"})
         links_section_plaintext = "\n".join(
-            list(map(lambda l: f"{l['title']}: {l['url']}", links)),
+            [f"{link['title']}: {link['url']}" for link in links],
         )
-        gpx_wps.description = f"{gpx_wps.description}\n\n{links_section_plaintext}"
+        gpx_wps.description += f"\n\n{links_section_plaintext}"
 
         return gpx_wps
 
