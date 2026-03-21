@@ -737,7 +737,7 @@ for country in country_indexes:
         gpx_wps.longitude = museum["coordinates"][location_index]["lon"]
         gpx_wps.symbol = "Museum"
 
-        gpx_wps.name = museum["name"]
+        gpx_wps.name = museum["title"]
         if location_index > 0:
             gpx_wps.name = f"{gpx_wps.name} ({location_index + 1})"
 
@@ -748,16 +748,16 @@ for country in country_indexes:
         if museum["original_name"]:
             gpx_wps.description = f"{museum['original_name']}\n\n{gpx_wps.description}"
 
-        # Append "Display" section listing
+        # Append "Vehicle types" values,
         # what kinds of vehicles are exhibited
-        if museum["display"]:
-            display_item_list_formatted = "\n".join(
-                list(map(lambda di: f"- {di}", museum["display"])),
+        if museum["vehicle_types"]:
+            vehicle_types_item_list_formatted = "\n".join(
+                [f"- {vt}" for vt in museum["vehicle_types"]],
             )
-            display_section_formatted = f"Display:\n{display_item_list_formatted}"
-            gpx_wps.description = (
-                f"{gpx_wps.description}\n\n{display_section_formatted}"
+            vehicle_types_item_list_formatted = (
+                f"Vehicle types:\n{vehicle_types_item_list_formatted}"
             )
+            gpx_wps.description += f"\n\n{vehicle_types_item_list_formatted}"
 
         # Append "Info" section
         # usually containing opening times
@@ -827,13 +827,13 @@ for country in country_indexes:
         # https://www.topografix.com/GPX/1/1/gpx.xsd
         # but gpxpy library assumes there can be only one link tag
         # https://github.com/tkrajina/gpxpy/issues/138
-        gpx_wps.link = museum["absolute_url"]
+        gpx_wps.link = museum["permalink"]
 
         # Besides this gpxpy issue,
         # Google My Maps ignores <link> tags in Waypoints when importing,
         # so add all the links at the end of <desc> tag
         links = museum["links"].copy()
-        links.append({"url": museum["absolute_url"], "title": "Automuseums.info"})
+        links.append({"url": museum["permalink"], "title": "Automuseums.info"})
         links_section_plaintext = "\n".join(
             list(map(lambda l: f"{l['title']}: {l['url']}", links)),
         )
