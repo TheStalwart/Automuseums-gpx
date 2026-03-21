@@ -419,12 +419,6 @@ def parse_museum_page(page, museum_properties):
         if original_name_candidate != title_in_index:
             original_name = original_name_candidate
 
-    # "Display" section on museum page usually lists
-    # what kinds of vehicles are exhibited
-    # TODO: don't just copy the value from museum_properties,
-    # rework gpx generation code instead
-    display = museum_properties["vehicle_types"]
-
     info = None
     info_div = page.find(
         class_="museum-additional-info-content",
@@ -511,7 +505,6 @@ def parse_museum_page(page, museum_properties):
     return {
         "description": museum_description,
         "original_name": original_name,
-        "display": display,
         "info": info,
         "address": address,
         "email": email,
