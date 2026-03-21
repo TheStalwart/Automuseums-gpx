@@ -896,7 +896,7 @@ if args.group:
         file_path = Path(OUTPUT_ROOT_PER_COUNTRY) / country_file_name
 
         if not file_path.is_file():
-            rprint(f"Warning: missing [red]{country_file_name}[/red]")
+            rprint(f"[red]Warning:[/red] missing [red]{country_file_name}[/red]")
             return None
 
         with file_path.open("r", encoding="utf-8") as gpx_file:
