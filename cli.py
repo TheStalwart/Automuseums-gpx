@@ -5,7 +5,7 @@ import math
 import re
 import sys
 import time
-from functools import reduce
+from html import unescape
 from itertools import chain
 from pathlib import Path
 
@@ -342,147 +342,171 @@ def load_museum_page(country, museums, museum_properties):
 
 
 def parse_museum_page(page, museum_properties):
-    museum_description = ""
+    # New (since February 2026) Wordpress frontend
+    # exposes most of the useful values
+    # as a convenient JSON embedded in HTML <script> tag.
+    # But some values like description and links
+    # are clipped in JSON,
+    # so we still need to parse HTML like savages.
+    museum_json_tag = page.find(type="application/ld+json")
+    museum_json = json.loads(museum_json_tag.text)
 
-    content_div = page.find(class_="node-content")
+    # Fallback description from JSON.
+    # It's trimmed, but it's better than no description,
+    # if we fail to parse HTML
+    museum_description = museum_json["description"]
 
+    # Fallback links from JSON.
+    # Only one main link usually.
+    # Sometimes no links and sameAs key is absent,
+    # e.g. https://automuseums.info/museum/museum-of-antique-technique-sodeliskiu/
     links = []
-    links_div = content_div.find(class_="field--name-link")
-    if links_div:
-        links = list(
-            map(
-                lambda a: {"url": a["href"], "title": a.text.strip()},
-                links_div.find_all("a"),
-            ),
-        )
+    if museum_json.get("sameAs"):
+        links = [{"url": url, "title": "Website"} for url in museum_json["sameAs"]]
 
-    body_div = content_div.find(class_="field--name-body")
-    if body_div:
-        # for some museums, description is wrapped in extra <p> tag
+    # Since migration to Wordpress, there are two layouts:
+    # one regular, e.g. https://automuseums.info/museum/the-royal-automobile-museum/
+    # and another for FIVA-certified museums, e.g. https://automuseums.info/museum/grom-motorcycle-museum/
+    description_div = page.find(
+        class_="museum-description-content",
+    ) or page.find(
+        class_="fiva-description",
+    )
+
+    if description_div:
+        # For some museums, description is wrapped in extra <p> tag
         #
-        # https://automuseums.info/denmark/egeskov-castle
+        # https://automuseums.info/museum/egeskov-castle/ (denmark)
         #       has multiple <p> tags
         #
-        # https://automuseums.info/jordan/royal-automobile-museum
+        # https://automuseums.info/museum/the-royal-automobile-museum/ (jordan)
         #       field--name-body value is enclosed in double-quotes
-
+        #
         # Most popular apps with GPX import feature do not support HTML tags,
         # so do a simple conversion to plain text
         museum_description = (
-            "".join(list(body_div.text)).replace("\n", "\n\n").strip().strip('"')
+            "".join(list(description_div.text)).replace("\n", "\n\n").strip().strip('"')
         )
 
         # Some pages contain extra links in description,
-        # e.g. https://automuseums.info/lithuania/lithuanian-road-museum
+        # e.g. https://automuseums.info/museum/lithuanian-road-museum/
         # Since we strip description to plain text,
         # capture those extra links to avoid losing them.
         # Also, avoid random "<a id="search" name="search"></a>"
-        # in https://automuseums.info/united-states/walker-transportation-collection
-        # by only capturing links with text
+        # in https://automuseums.info/museum/walker-transportation-collection/
+        # by only capturing links with text with `string=True` parameter
         # https://pytutorial.com/beautifulsoup-find-by-text/
         # https://beautiful-soup-4.readthedocs.io/en/latest/#id12
-        links_in_description = body_div.find_all("a", string=True)
-        if links_in_description:
-            links.extend(
-                list(
-                    map(
-                        lambda a: {"url": a["href"], "title": a.text.strip()},
-                        links_in_description,
-                    ),
-                ),
-            )
+        a_tags_in_description = description_div.find_all("a", string=True)
+        if a_tags_in_description:
+            links_in_description = [
+                {"url": a["href"], "title": a.text.strip()}
+                for a in a_tags_in_description
+            ]
+            links.extend(links_in_description)
 
     original_name = None
-    abbreviation_div = content_div.find(class_="field--name-abbreviation")
-    if (
-        abbreviation_div
-        and abbreviation_div.contents[0]
-        and (abbreviation_div.contents[0] != museum_properties["name"])
-    ):
+    abbreviation_div = page.find(
+        class_="museum-hero-native-name",
+    ) or page.find(
+        class_="fiva-museum-native-name",
+    )
+    if abbreviation_div and abbreviation_div.text:
         # if field--name-abbreviation value is different from main name
         # it's usually the original museum name in country's official language
-        original_name = abbreviation_div.contents[0]
+        title_in_index = unescape(museum_properties["title"])
+        original_name_candidate = abbreviation_div.text.strip()
+        if original_name_candidate != title_in_index:
+            original_name = original_name_candidate
 
-    display = None
-    display_div = content_div.find(class_="field--name-display")
-    if display_div and display_div.contents[0]:
-        # "Display" section on museum page usually lists
-        # what kinds of vehicles are exhibited
-        display = list(
-            map(
-                lambda item_tag: item_tag.text,
-                display_div.find_all(class_="field-item"),
-            ),
-        )
+    # "Display" section on museum page usually lists
+    # what kinds of vehicles are exhibited
+    # TODO: don't just copy the value from museum_properties,
+    # rework gpx generation code instead
+    display = museum_properties["vehicle_types"]
 
     info = None
-    info_div = content_div.find(class_="field--name-info")
-    if (
-        info_div
-        and info_div.find(class_="field-item")
-        and info_div.find(class_="field-item").contents[0]
-    ):
+    info_div = page.find(
+        class_="museum-additional-info-content",
+    ) or page.find(
+        class_="fiva-additional-info-content",
+    )
+    if info_div and info_div.text:
         # this field usually contains extra properties
         # e.g. opening times or "Open by appointment" string
-        info = "".join(list(info_div.find(class_="field-item").text)).strip().strip('"')
+        info = "".join(list(info_div.text)).strip().strip('"')
 
     address = None
-    address_div = content_div.find(class_="field--name-address")
-    if address_div and address_div.contents[0]:
-        # "Address" section is structured as a list of field-item tags
-        # each one containing a structure of spans
-        # for every part of the address.
-        # Do our best flattening those structures
-        # to return an array of multiline strings.
-        # As of January 2025, almost all multi-coordinates museums
-        # are also a multi-address museums
+    leaflet_div = page.find(
+        id="single-museum-map",
+    ) or page.find(
+        id="fiva-single-museum-map",
+    )
+    if leaflet_div:
+        # In the old Drupal version, almost all multi-coordinates museums
+        # were also a multi-address museums
         # with address index matching coordinates index.
         # When generating GPX waypoints from multi-location museum
-        # we only pick one address and one coordinate pair per waypoint.
-        address = list(
-            map(
-                lambda address_item_tag: address_item_tag.text.strip(),
-                address_div.find_all(class_="field-item"),
-            ),
-        )
+        # we only picked one address and one coordinate pair per waypoint.
+        # In the new Wordpress version, as of March 2026,
+        # multi-location museums are not implemented.
+        address_string = leaflet_div["data-address"]
+
+        # FIVA Certified Members have separate fields for city and country.
+        # Concatenate components to match non-FIVA format
+        city = leaflet_div.get("data-city")
+        if city:
+            address_string += f", {city}"
+        country = leaflet_div.get("data-country")
+        if country:
+            address_string += f", {country}"
+
+        address = [address_string]
 
     email = None
-    email_div = content_div.find(class_="field--name-e-mail")
-    if email_div and email_div.contents[0]:
-        # "E-mail" section is a list of items,
-        # much like "Display" section
-        email = list(
-            map(
-                lambda item_tag: item_tag.text.strip(),
-                email_div.find_all(class_="field-item"),
-            ),
-        )
-
     phone = None
-    phone_div = content_div.find(class_="field--name-phone")
-    if phone_div and phone_div.contents[0]:
-        # "Phone" section is a list of items,
-        # much like "Display" section
-        phone = list(
-            map(
-                lambda item_tag: item_tag.text.strip(),
-                phone_div.find_all(class_="field-item"),
-            ),
-        )
 
-    drupal_node_id = page.find("article")["data-history-node-id"]
+    contact_point = museum_json.get("contactPoint")
+    if contact_point:
+        contact_point_email = contact_point.get("email")
+        if contact_point_email:
+            email = [contact_point_email]
 
-    data_json = page.find(
-        attrs={"data-drupal-selector": "drupal-settings-json"},
-    ).contents[0]
-    data = json.loads(data_json)
-    leaflet_features = data["leaflet"][
-        f"leaflet-map-node-museum-{drupal_node_id}-coordinates"
-    ]["features"]
-    leaflet_points = list(filter(lambda f: f["type"] == "point", leaflet_features))
-    coordinates = list(
-        map(lambda p: {"lat": p["lat"], "lon": p["lon"]}, leaflet_points),
-    )
+        contact_point_telephone = contact_point.get("telephone")
+        if contact_point_telephone:
+            # Grom Motorcycle Museum
+            # has too many spaces in phone number value.
+            # Simplify for better format recognition by apps.
+            # https://automuseums.info/museum/grom-motorcycle-museum/
+            phone = [contact_point_telephone.replace(" ", "")]
+
+    # Proper links from HTML.
+    # Some pages have more links in HTML, than in JSON,
+    # e.g. https://automuseums.info/museum/ikaho-toy-doll-and-car-museum/
+    # Select only one copy of contact-information-card,
+    # because there are multiple copies for different layouts
+    contact_info_card_div = page.find(class_="contact-information-card")
+    if contact_info_card_div:
+        links = [
+            {"url": a["href"], "title": a.text.strip()}
+            for a in contact_info_card_div.find_all("a")
+        ]
+
+    # Filter out phone and email links
+    # because we have a separate property for that
+    links = list(filter(lambda link: not link["url"].startswith("tel:"), links))
+    links = list(filter(lambda link: not link["url"].startswith("mailto:"), links))
+
+    # Since migration from Drupal to Wordpress,
+    # multi-location museums only list one coordinate set.
+    # I reported that to the website admin in March 2026,
+    # and he replied that it's a known issue that will be fixed in the future.
+    # GPX build can get these values from museum index,
+    # but i'm gonna keep a copy in this structure
+    # until we know how upstream will handle multi-location museums.
+    coordinates = [
+        {"lat": museum_properties["latitude"], "lon": museum_properties["longitude"]},
+    ]
 
     return {
         "description": museum_description,
@@ -493,7 +517,6 @@ def parse_museum_page(page, museum_properties):
         "email": email,
         "phone": phone,
         "links": links,
-        "drupal_node_id": drupal_node_id,
         "coordinates": coordinates,
     }
 
