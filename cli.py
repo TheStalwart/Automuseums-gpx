@@ -773,54 +773,40 @@ for country in country_indexes:
                 address_section_formatted = (
                     f"Address:\n{museum['address'][location_index]}"
                 )
-                gpx_wps.description = (
-                    f"{gpx_wps.description}\n\n{address_section_formatted}"
-                )
+                gpx_wps.description += f"\n\n{address_section_formatted}"
             else:
                 # there is a museum in Iran
                 # that has two coordinates but only one address
                 # https://automuseums.info/iran/abadan-gasoline-house-museum
-                address_item_list_formatted = "\n\n".join(
-                    list(map(lambda ai: f"{ai}", museum["address"])),
-                )
+                address_item_list_formatted = "\n\n".join(museum["address"])
                 address_section_formatted = f"Address:\n{address_item_list_formatted}"
-                gpx_wps.description = (
-                    f"{gpx_wps.description}\n\n{address_section_formatted}"
-                )
+                gpx_wps.description += f"\n\n{address_section_formatted}"
 
         # Append "E-mail" section if available
         if museum["email"]:
             if len(museum["email"]) > 1:
                 email_item_list_formatted = "\n".join(
-                    list(map(lambda pi: f"{pi}", museum["email"])),
+                    [f"{em}" for em in museum["email"]],
                 )
                 email_section_formatted = f"E-mail:\n{email_item_list_formatted}"
-                gpx_wps.description = (
-                    f"{gpx_wps.description}\n\n{email_section_formatted}"
-                )
+                gpx_wps.description += f"\n\n{email_section_formatted}"
             else:
                 # most museums have only one email listed,
                 # so collapse the entry into a single line
-                gpx_wps.description = (
-                    f"{gpx_wps.description}\n\nE-mail: {museum['email'][0]}"
-                )
+                gpx_wps.description += f"\n\nE-mail: {museum['email'][0]}"
 
         # Append "Phone" section if available
         if museum["phone"]:
             if len(museum["phone"]) > 1:
                 phone_item_list_formatted = "\n".join(
-                    list(map(lambda pi: f"{pi}", museum["phone"])),
+                    [f"{ph}" for ph in museum["phone"]],
                 )
                 phone_section_formatted = f"Phone:\n{phone_item_list_formatted}"
-                gpx_wps.description = (
-                    f"{gpx_wps.description}\n\n{phone_section_formatted}"
-                )
+                gpx_wps.description += f"\n\n{phone_section_formatted}"
             else:
                 # most museums have only one phone number listed,
                 # so collapse the entry into a single line
-                gpx_wps.description = (
-                    f"{gpx_wps.description}\n\nPhone: {museum['phone'][0]}"
-                )
+                gpx_wps.description += f"\n\nPhone: {museum['phone'][0]}"
 
         # GPX 1.1 Schema supports multiple links per waypoint,
         # https://www.topografix.com/gpx.asp
