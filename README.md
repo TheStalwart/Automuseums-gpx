@@ -7,9 +7,6 @@ This repo is an effort to have content of [Automuseums.info](https://automuseums
 
 Download generated GPX files here: [https://automuseums.tldrtravel.info](https://automuseums.tldrtravel.info)
 
-> [!WARNING]
-> On January 30th, 2026, upstream Automuseums.info website was migrated from Drupal to Wordpress, and this code doesn't work anymore. I will likely rewrite necessary parts to repair the project in the future, but for now you can download slightly outdated GPX files from my instance.
-
 ## Example use
 
 Display help:
