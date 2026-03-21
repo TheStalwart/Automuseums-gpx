@@ -675,7 +675,7 @@ if args.country:
     country_indexes.append(load_country_museum_list(selected_country))
 elif args.lowprofile:
     rprint("Keeping low profile, updating 1 country with oldest cache...")
-    selected_country = sorted(country_list, key=lambda c: c["cache_timestamp"])[0]
+    selected_country = sorted(country_list, key=lambda c: c["cache_index_timestamp"])[0]
     country_indexes.append(load_country_museum_list(selected_country))
 else:
     rprint("Updating all country indexes...")
