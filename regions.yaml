@@ -156,7 +156,7 @@ Asia: # as listed on https://www.countries-ofthe-world.com/countries-of-asia.htm
 - japan
 - jordan
 # - Kazakhstan # Not listed on Automuseums.info
-- kuwait
+# - kuwait # Not listed on Automuseums.info
 # - Kyrgyzstan # Not listed on Automuseums.info
 # - Laos # Not listed on Automuseums.info
 # - Lebanon # Not listed on Automuseums.info
@@ -236,7 +236,7 @@ Africa: # as listed on https://www.countries-ofthe-world.com/countries-of-africa
 # - Somalia # Not listed on Automuseums.info
 - south-africa
 # - South Sudan # Not listed on Automuseums.info
-- sudan
+# - sudan # Not listed on Automuseums.info
 - tanzania
 # - Togo # Not listed on Automuseums.info
 # - Tunisia # Not listed on Automuseums.info
