@@ -857,7 +857,7 @@ if args.group:
             rprint(exc)
 
     # Extend groups definition with "All Countries"
-    groups["All countries"] = list(map(lambda c: c["name"], country_list))
+    groups["All countries"] = [country["name"] for country in country_list]
 
     # Load all generated per-country GPX files we need
     # for groups defined in YAML config file
