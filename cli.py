@@ -193,6 +193,9 @@ def load_country_museum_list(selected_country):
         - https://automuseums.info/iran/abadan-gasoline-house-museum (only one address)
         """
 
+        # Extract "Human readable" country name
+        selected_country["title"] = museum_list[0]["country"]
+
         return {"country": selected_country, "museums": museum_list}
 
     def download_index():
@@ -717,7 +720,7 @@ if args.verbose:
 for country in country_indexes:
     gpx = gpxpy.gpx.GPX()
     gpx.creator = GPX_CREATOR
-    gpx.name = f"Automuseums.info: {country['country']['name']}"
+    gpx.name = f"Automuseums.info: {country['country']['title']}"
     gpx.description = f"Generated using {gpx.creator}"
     gpx.link = country["country"]["absolute_url"]
 
