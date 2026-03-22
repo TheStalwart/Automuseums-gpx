@@ -13,6 +13,16 @@
   // Configure tool-specific properties.
   "customizations": {
     "vscode": {
+      // Do not use .venv in devcontainer, as it might contain Windows binaries
+      "settings": {
+        "python.discovery.excludePatterns": [
+          "${workspaceFolder}/.venv/**"
+        ],
+        "python.venvPath": "",
+        "python.venvFolders": [],
+        "python-envs.defaultEnvManager": "ms-python.python:system",
+        "python-envs.environmentDirectories": []
+      },
       "extensions": [
         "charliermarsh.ruff",
         "DavidAnson.vscode-markdownlint",
