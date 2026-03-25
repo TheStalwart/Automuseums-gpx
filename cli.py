@@ -1,4 +1,5 @@
 import argparse
+import copy
 import datetime
 import json
 import math
@@ -475,9 +476,20 @@ def parse_museum_page(page, museum_properties):
     # because there are multiple copies for different layouts
     contact_info_card_div = page.find(class_="contact-information-card")
     if contact_info_card_div:
+
+        def strip_link_title(a_tag):
+            a_tag_copy = copy.deepcopy(a_tag)
+
+            # Social media links
+            # have undesirable emoji prefix
+            for emoji_container in a_tag_copy.find_all(class_="social-icon"):
+                emoji_container.decompose()
+
+            return a_tag_copy.text.strip()
+
         links.extend(
             [
-                {"url": a["href"], "title": a.text.strip()}
+                {"url": a["href"], "title": strip_link_title(a)}
                 for a in contact_info_card_div.find_all("a")
             ],
         )
