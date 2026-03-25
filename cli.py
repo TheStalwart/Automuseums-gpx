@@ -237,13 +237,16 @@ def load_country_museum_list(selected_country):
 
             museum_array = json_contents["museums"]
 
-            # As of March 2026, some museums have no geographic coordinates,
+            # As of March 2026, some museums had no geographic coordinates,
             # e.g. https://automuseums.info/museum/beijing-classic-car-museum/
-            # and https://automuseums.info/museum/nemes-motor-museum/
-            # have empty strings for latitude and longitude in index
+            # and https://automuseums.info/museum/nemes-motor-museum/ .
+            # They had empty strings for latitude and longitude in index
             # and no "geo" key in page's JSON.
             # These issues were reported to the website admin,
-            # but this failsafe filter should stay.
+            # and Beijing was fixed by adding geolocation data,
+            # but Nemes is likely to stay without precise geolocation
+            # due to a privacy request from museum owner.
+            # So this failsafe filter should stay indefinitely.
             def has_geolocation(museum):
                 if not (len(museum["latitude"]) and len(museum["longitude"])):
                     rprint(
