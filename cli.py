@@ -479,10 +479,12 @@ def parse_museum_page(page, museum_properties):
     # because there are multiple copies for different layouts
     contact_info_card_div = page.find(class_="contact-information-card")
     if contact_info_card_div:
-        links = [
-            {"url": a["href"], "title": a.text.strip()}
-            for a in contact_info_card_div.find_all("a")
-        ]
+        links.extend(
+            [
+                {"url": a["href"], "title": a.text.strip()}
+                for a in contact_info_card_div.find_all("a")
+            ],
+        )
 
     # Filter out phone and email links
     # because we have a separate property for that
