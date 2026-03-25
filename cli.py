@@ -354,13 +354,9 @@ def parse_museum_page(page, museum_properties):
     # if we fail to parse HTML
     museum_description = museum_json["description"]
 
-    # Fallback links from JSON.
-    # Only one main link usually.
-    # Sometimes no links and sameAs key is absent,
-    # e.g. https://automuseums.info/museum/museum-of-antique-technique-sodeliskiu/
+    # Links are extracted from multiplace places on the page,
+    # then filtered before returning the value back to index.
     links = []
-    if museum_json.get("sameAs"):
-        links = [{"url": url, "title": "Website"} for url in museum_json["sameAs"]]
 
     # Since migration to Wordpress, there are two layouts:
     # one regular, e.g. https://automuseums.info/museum/the-royal-automobile-museum/
@@ -490,6 +486,22 @@ def parse_museum_page(page, museum_properties):
     # because we have a separate property for that
     links = list(filter(lambda link: not link["url"].startswith("tel:"), links))
     links = list(filter(lambda link: not link["url"].startswith("mailto:"), links))
+
+    # Fallback links from JSON.
+    # Only one main link usually.
+    # Sometimes no links and sameAs key is absent,
+    # e.g. https://automuseums.info/museum/museum-of-antique-technique-sodeliskiu/
+    if museum_json.get("sameAs"):
+        # Only add links from this source
+        # if the URL is not already found elsewhere
+        urls_present_in_links = {entry["url"] for entry in links}
+        links.extend(
+            [
+                {"url": url, "title": "Website"}
+                for url in museum_json["sameAs"]
+                if url not in urls_present_in_links
+            ],
+        )
 
     # Since migration from Drupal to Wordpress,
     # multi-location museums only list one coordinate set.
