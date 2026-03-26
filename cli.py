@@ -1,6 +1,7 @@
 import argparse
 import copy
 import datetime
+import difflib
 import json
 import math
 import re
@@ -929,6 +930,21 @@ if args.group:
             pprint(groups)
         except yaml.YAMLError as exc:
             rprint(exc)
+
+    # Check if upstream website contains countries not belonging to any group
+    grouped_countries = sorted(set(chain.from_iterable(groups.values())))
+    upstream_countries = sorted([country["name"] for country in country_list])
+    country_list_diff = difflib.Differ().compare(grouped_countries, upstream_countries)
+    changes_to_countrylist = [
+        diffline for diffline in country_list_diff if diffline.startswith(("+", "-"))
+    ]
+    if len(changes_to_countrylist) > 0:
+        warning_message = (
+            f"Upstream country list inconsistent with {CONFIG_GROUP_FILENAME}:\n"
+            f"{'\n'.join(changes_to_countrylist)}"
+        )
+        sentry_sdk.capture_message(warning_message)
+        rprint(f"[red]Warning:[/red] {warning_message}")
 
     # Extend groups definition with "All Countries"
     groups["All countries"] = [country["name"] for country in country_list]
