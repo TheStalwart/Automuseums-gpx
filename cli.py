@@ -950,12 +950,7 @@ if args.group:
             return gpxpy.parse(gpx_file)
 
     per_country_data = {
-        k: v
-        for (k, v) in zip(
-            required_countries,
-            map(load_country_gpx_data, required_countries),
-            strict=True,
-        )
+        country: load_country_gpx_data(country) for country in required_countries
     }
 
     if not OUTPUT_ROOT_GROUPED.is_dir():
