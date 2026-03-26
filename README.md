@@ -12,7 +12,7 @@ Download generated GPX files here: [https://automuseums.tldrtravel.info](https:/
 Display help:
 `.venv/bin/python3 cli.py --help`
 
-Generate all possible output GPX files (uses 1GB of RAM):
+Generate all possible output GPX files:
 `.venv/bin/python3 cli.py --group`
 
 Regenerate output files with current cache:
@@ -31,9 +31,6 @@ and refresh data on its museums, including `grouped-by-region` output files
 if `--group` option is enabled.
 
 With default `--request-delay` execution can take more than 2 hours for countries like United States.
-
-A convenient side-effect of only refreshing one country is low RAM requirement.
-Unlike all-country runs, lowprofile mode works fine on <=1GB RAM computers.
 
 ## Sentry.io SDK integration
 
