@@ -926,8 +926,9 @@ if args.group:
     with group_config_file_path.open() as stream:
         try:
             groups = yaml.safe_load(stream)
-            rprint(f"Loaded {CONFIG_GROUP_FILENAME}:")
-            pprint(groups)
+            rprint(f"Loaded {CONFIG_GROUP_FILENAME}")
+            if args.verbose:
+                pprint(groups)
         except yaml.YAMLError as exc:
             rprint(exc)
 
