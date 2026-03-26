@@ -635,7 +635,11 @@ args = arg_parser.parse_args()
 # to avoid crashing on monthly DNS resolution failures
 # https://stackoverflow.com/questions/23013220/max-retries-exceeded-with-url-in-requests
 requests = LimiterSession(per_second=(60 / args.request_delay) / 60)
-request_retry_config = Retry(total=5, backoff_factor=args.request_delay)
+request_retry_config = Retry(
+    total=5,
+    status_forcelist=[500],
+    backoff_factor=args.request_delay,
+)
 http_adapter = HTTPAdapter(max_retries=request_retry_config)
 requests.mount("http://", http_adapter)
 requests.mount("https://", http_adapter)
