@@ -448,6 +448,14 @@ def parse_museum_page(page, museum_properties):
         # e.g. opening times or "Open by appointment" string
         info = "".join(list(info_div.text)).strip().strip('"')
 
+    if info:
+        # Lots of museums have excessive newline characters
+        # after "Opening times:" header
+        info = re.sub(r"(Opening times:)\n+", r"\1\n", info)
+
+        # Replace sequences of >=3 newlines with double-newline
+        info = re.sub(r"\n{3,}", "\n\n", info)
+
     address = None
     leaflet_div = page.find(
         id="single-museum-map",
