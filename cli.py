@@ -939,9 +939,10 @@ if args.group:
         diffline for diffline in country_list_diff if diffline.startswith(("+", "-"))
     ]
     if len(changes_to_countrylist) > 0:
+        changes_summary = "\n".join(changes_to_countrylist)
         warning_message = (
             f"Upstream country list inconsistent with {CONFIG_GROUP_FILENAME}:\n"
-            f"{'\n'.join(changes_to_countrylist)}"
+            f"{changes_summary}"
         )
         sentry_sdk.capture_message(warning_message)
         rprint(f"[red]Warning:[/red] {warning_message}")
