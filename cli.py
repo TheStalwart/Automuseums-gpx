@@ -182,6 +182,12 @@ def load_country_museum_list(selected_country):
         This issue was found on March 18th, 2026,
         during codebase migration to support the new Wordpress engine.
 
+        On March 21st, 2026, i received an email from the website admin
+        claiming the additional location data is back on the website.
+        Now multi-location museum pages have a primary location
+        + one or multiple "branches",
+        e.g. https://automuseums.info/museum/museum-of-historical-motorcycles/
+
         Museum pages listing multiple locations, as of January 2025:
         - https://automuseums.info/czech-republic/museum-historical-motorcycles
         - https://automuseums.info/germany/fire-museum-schw%C3%A4bisch-hall
@@ -350,6 +356,19 @@ def parse_museum_page(page, museum_properties):
     museum_json_tag = page.find(type="application/ld+json")
     museum_json = json.loads(museum_json_tag.text)
 
+    def extract_branch_data(page):
+        leaflet_container = page.find(id="single-museum-map")
+        if not leaflet_container:
+            return []
+
+        data_branches_value = leaflet_container.get("data-branches")
+        if not data_branches_value:
+            return []
+
+        return json.loads(data_branches_value)
+
+    branch_data = extract_branch_data(page)
+
     # Fallback description from JSON.
     # It's trimmed, but it's better than no description,
     # if we fail to parse HTML
@@ -452,6 +471,13 @@ def parse_museum_page(page, museum_properties):
 
         address = [address_string]
 
+    def format_branch_address(b):
+        return f"{b['address']}, {b['city']}, {b['postal_code']}, {b['country_code']}"
+
+    address.extend(
+        [format_branch_address(branch) for branch in branch_data],
+    )
+
     email = None
     phone = None
 
@@ -515,16 +541,17 @@ def parse_museum_page(page, museum_properties):
             ],
         )
 
-    # Since migration from Drupal to Wordpress,
-    # multi-location museums only list one coordinate set.
-    # I reported that to the website admin in March 2026,
-    # and he replied that it's a known issue that will be fixed in the future.
-    # GPX build can get these values from museum index,
-    # but i'm gonna keep a copy in this structure
-    # until we know how upstream will handle multi-location museums.
     coordinates = [
         {"lat": museum_properties["latitude"], "lon": museum_properties["longitude"]},
     ]
+    coordinates.extend(
+        [
+            # In museum index, coordinate values are strings,
+            # but leaflet JSON contains floats
+            {"lat": f"{branch['latitude']}", "lon": f"{branch['longitude']}"}
+            for branch in branch_data
+        ],
+    )
 
     return {
         "description": museum_description,
@@ -768,7 +795,7 @@ for country in country_indexes:
 
         gpx_wps.name = museum["title"]
         if location_index > 0:
-            gpx_wps.name = f"{gpx_wps.name} ({location_index + 1})"
+            gpx_wps.name = f"{gpx_wps.name} (Branch {location_index})"
 
         gpx_wps.description = museum["description"]
 
