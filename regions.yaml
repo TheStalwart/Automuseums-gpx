@@ -136,7 +136,7 @@ Europe: # as listed on https://www.countries-ofthe-world.com/countries-of-europe
 - united-kingdom
 # - Vatican # Not listed on Automuseums.info
 
-Asia: # as listed on https://www.countries-ofthe-world.com/countries-of-asia.html
+Asia: # based on https://www.countries-ofthe-world.com/countries-of-asia.html
 # - Afghanistan # Not listed on Automuseums.info
 # - Armenia # Not listed on Automuseums.info
 - azerbaijan
@@ -160,13 +160,14 @@ Asia: # as listed on https://www.countries-ofthe-world.com/countries-of-asia.htm
 # - Kyrgyzstan # Not listed on Automuseums.info
 # - Laos # Not listed on Automuseums.info
 # - Lebanon # Not listed on Automuseums.info
+- macao
 - malaysia
 # - Maldives # Not listed on Automuseums.info
 # - Mongolia # Not listed on Automuseums.info
 # - Myanmar # Not listed on Automuseums.info
 # - Nepal # Not listed on Automuseums.info
 # - North Korea # Not listed on Automuseums.info
-# - Oman # Not listed on Automuseums.info
+- oman # Not listed on Automuseums.info
 # - Pakistan # Not listed on Automuseums.info
 # - Palestine # Not listed on Automuseums.info
 - philippines
