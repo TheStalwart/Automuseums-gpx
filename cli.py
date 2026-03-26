@@ -16,7 +16,6 @@ import humanize
 import sentry_sdk
 import yaml
 from bs4 import BeautifulSoup
-from requests import Session
 from requests.adapters import HTTPAdapter
 from requests_ratelimiter import LimiterSession
 from rich import print as rprint
