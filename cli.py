@@ -203,6 +203,10 @@ def load_country_museum_list(selected_country):
         # Extract "Human readable" country name
         selected_country["title"] = museum_list[0]["country"]
 
+        # Decode HTML entities in museum titles
+        for museum in museum_list:
+            museum["title"] = unescape(museum["title"])
+
         return {"country": selected_country, "museums": museum_list}
 
     def download_index():

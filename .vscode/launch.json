@@ -73,6 +73,20 @@
       ]
     },
     {
+      "name": "Python Debugger: Austria only",
+      // contains museum titles with HTML entities,
+      // e.g. https://automuseums.info/museum/fahrtraum-the-ferdinand-porsche-experience/
+      "type": "debugpy",
+      "request": "launch",
+      "program": "cli.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--omit-time",
+        "--country",
+        "austria"
+      ]
+    },
+    {
       "name": "Python Debugger: Switzerland only",
       // contains a multi-location "Saurer Museum and Depot"
       "type": "debugpy",
