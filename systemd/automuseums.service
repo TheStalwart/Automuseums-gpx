@@ -1,0 +1,11 @@
+[Unit]
+Description=Automuseums-GPX Refresh
+
+[Service]
+Type=oneshot
+ExecStart=/home/automuseums/Automuseums-gpx/.venv/bin/python3 /home/automuseums/Automuseums-gpx/cli.py --lowprofile --group
+WorkingDirectory=/home/automuseums/Automuseums-gpx
+User=automuseums
+Group=automuseums
+TimeoutStartSec=24h
+KillMode=process
